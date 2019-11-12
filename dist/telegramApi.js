@@ -56,6 +56,1517 @@ d=(h[l++]|h[l++]<<8|h[l++]<<16|h[l++]<<24)>>>0;(a.length&4294967295)!==d&&n(Erro
 !function(r){if("object"==typeof exports)module.exports=r();else if("function"==typeof define&&define.amd)define(r);else{var e;"undefined"!=typeof window?e=window:"undefined"!=typeof global?e=global:"undefined"!=typeof self&&(e=self),e.ContainerModule=r()}}(function(){return function r(e,n,t){function i(s,u){if(!n[s]){if(!e[s]){var f="function"==typeof require&&require;if(!u&&f)return f(s,!0);if(o)return o(s,!0);throw new Error("Cannot find module '"+s+"'")}var R=n[s]={exports:{}};e[s][0].call(R.exports,function(r){var n=e[s][1][r];return i(n?n:r)},R,R.exports,r,e,n,t)}return n[s].exports}for(var o="function"==typeof require&&require,s=0;s<t.length;s++)i(t[s]);return i}({1:[function(r,e,n){e.exports=r("./lib/ioc")},{"./lib/ioc":2}],2:[function(r,e,n){function t(){this._modules={}}function i(r,e,n){if(!r.isReady()){if(e.indexOf(r._name)!==-1)throw new Error(s.format(u.ERROR_CIRCULAR_DEPENDENCY,[r._name]));var t=[];r._deps.forEach(function(o){var f=n[o];if(!s.isDefined(f))throw new Error(s.format(u.ERROR_MODULE_NOT_FOUND,[o]));f.isReady()||(e.push(r._name),i(f,e,n),e.pop()),t.push(f.getInstance())}),r.build(t)}}var o=r("./module"),s=r("./utils"),u=r("./strings");t.prototype.register=function(r,e,n){if(!s.isString(r))throw new Error(u.ERROR_MODULE_NAME_INCORRECT);if(s.isDefined(this._modules[r]))throw new Error(s.format(u.ERROR_MODULE_ALREADY_DEFINED,[r]));if(s.isFunction(e)&&(n=e,e=[]),!s.isArray(e)||!s.isFunction(n))throw new Error(u.ERROR_PARAMETERS_INCORRECT);return s.isArray(n.dependencies)&&(e=s.union(e,n.dependencies)),this._modules[r]=new o(r,e,n),this},t.prototype.resolve=function(r){if(!s.isDefined(this._modules[r]))throw new Error(s.format(u.ERROR_MODULE_NOT_FOUND,[r]));return this._modules[r].getInstance()},t.prototype.init=function(){for(var r in this._modules)this._modules.hasOwnProperty(r)&&i(this._modules[r],[],this._modules);return this},e.exports=t},{"./module":3,"./strings":4,"./utils":5}],3:[function(r,e,n){function t(r,e,n){this._name=r,this._deps=e,this._ctor=n}var i=r("./utils"),o=r("./strings");t.prototype.isReady=function(){return i.isDefined(this._instance)},t.prototype.build=function(r){if(this.isReady())throw new Error(i.format(o.ERROR_MODULE_ALREADY_INITIALIZED,[this._name]));if(this._instance=this._ctor.apply(null,r),!this.isReady())throw new Error(i.format(o.ERROR_MODULE_INITIALIZE,[this._name]))},t.prototype.getInstance=function(){if(!this.isReady())throw new Error(i.format(o.ERROR_MODULE_NOT_INITIALIZED,[this._name]));return this._instance},e.exports=t},{"./strings":4,"./utils":5}],4:[function(r,e,n){e.exports={ERROR_CIRCULAR_DEPENDENCY:"{0}: Circular dependency",ERROR_MODULE_ALREADY_DEFINED:"{0}: Module is already defined",ERROR_MODULE_ALREADY_INITIALIZED:"{0}: Module is already initialized",ERROR_MODULE_INITIALIZE:"{0}: Module return empty result",ERROR_MODULE_NAME_INCORRECT:"Incorrect module name",ERROR_MODULE_NOT_INITIALIZED:"{0}: Module is not initialized",ERROR_MODULE_NOT_FOUND:"{0}: Module not found",ERROR_PARAMETERS_INCORRECT:"Incorrect parameters"}},{}],5:[function(r,e,n){function t(r){return"string"==typeof r}function i(r){return"function"==typeof r}function o(r){return Array.isArray(r)}function s(r){return"undefined"!=typeof r}function u(r,e){return r.replace(/\{(\d+)}/g,function(r,n){return e[parseInt(n)]})}function f(){for(var r=Array.prototype.slice.call(arguments),e=r[0],n=1;n<r.length;n++){var t=r[n];for(var i in t)t.hasOwnProperty(i)&&s(t[i])&&(e[i]=t[i])}return e}function R(){for(var r=Array.prototype.slice.call(arguments),e=[],n=0;n<r.length;n++){var t=r[n];if(!o(t))throw new Error(u("Argument {0} is not array",[n+1]));for(var i=0;i<t.length;i++)e.push(t[i])}return e}n.isString=t,n.isFunction=i,n.isArray=o,n.isDefined=s,n.format=u,n.extend=f,n.union=R},{}]},{},[1])(1)});
 var CryptoJS=CryptoJS||function(a,b){var c={},d=c.lib={},e=d.Base=function(){function a(){}return{extend:function(b){a.prototype=this;var c=new a;return b&&c.mixIn(b),c.hasOwnProperty("init")||(c.init=function(){c.$super.init.apply(this,arguments)}),c.init.prototype=c,c.$super=this,c},create:function(){var a=this.extend();return a.init.apply(a,arguments),a},init:function(){},mixIn:function(a){for(var b in a)a.hasOwnProperty(b)&&(this[b]=a[b]);a.hasOwnProperty("toString")&&(this.toString=a.toString)},clone:function(){return this.init.prototype.extend(this)}}}(),f=d.WordArray=e.extend({init:function(a,c){a=this.words=a||[],c!=b?this.sigBytes=c:this.sigBytes=4*a.length},toString:function(a){return(a||h).stringify(this)},concat:function(a){var b=this.words,c=a.words,d=this.sigBytes,e=a.sigBytes;if(this.clamp(),d%4)for(var f=0;e>f;f++){var g=c[f>>>2]>>>24-f%4*8&255;b[d+f>>>2]|=g<<24-(d+f)%4*8}else if(c.length>65535)for(var f=0;e>f;f+=4)b[d+f>>>2]=c[f>>>2];else for(var f=0;f<c.length;f++)b.push(c[f]);return this.sigBytes+=e,this},clamp:function(){var b=this.words,c=this.sigBytes;b[c>>>2]&=4294967295<<32-c%4*8,b.length=a.ceil(c/4)},clone:function(){var a=e.clone.call(this);return a.words=this.words.slice(0),a},random:function(b){for(var c=[],d=0;b>d;d+=4)c.push(4294967296*a.random()|0);return new f.init(c,b)}}),g=c.enc={},h=g.Hex={stringify:function(a){for(var b=a.words,c=a.sigBytes,d=[],e=0;c>e;e++){var f=b[e>>>2]>>>24-e%4*8&255;d.push((f>>>4).toString(16)),d.push((15&f).toString(16))}return d.join("")},parse:function(a){for(var b=a.length,c=[],d=0;b>d;d+=2)c[d>>>3]|=parseInt(a.substr(d,2),16)<<24-d%8*4;return new f.init(c,b/2)}},i=g.Latin1={stringify:function(a){for(var b=a.words,c=a.sigBytes,d=[],e=0;c>e;e++){var f=b[e>>>2]>>>24-e%4*8&255;d.push(String.fromCharCode(f))}return d.join("")},parse:function(a){for(var b=a.length,c=[],d=0;b>d;d++)c[d>>>2]|=(255&a.charCodeAt(d))<<24-d%4*8;return new f.init(c,b)}},j=g.Utf8={stringify:function(a){try{return decodeURIComponent(escape(i.stringify(a)))}catch(b){throw new Error("Malformed UTF-8 data")}},parse:function(a){return i.parse(unescape(encodeURIComponent(a)))}},k=d.BufferedBlockAlgorithm=e.extend({reset:function(){this._data=new f.init,this._nDataBytes=0},_append:function(a){"string"==typeof a&&(a=j.parse(a)),this._data.concat(a),this._nDataBytes+=a.sigBytes},_process:function(b){var c=this._data,d=c.words,e=c.sigBytes,g=this.blockSize,h=4*g,i=e/h;i=b?a.ceil(i):a.max((0|i)-this._minBufferSize,0);var j=i*g,k=a.min(4*j,e);if(j){for(var l=0;j>l;l+=g)this._doProcessBlock(d,l);var m=d.splice(0,j);c.sigBytes-=k}return new f.init(m,k)},clone:function(){var a=e.clone.call(this);return a._data=this._data.clone(),a},_minBufferSize:0}),l=(d.Hasher=k.extend({cfg:e.extend(),init:function(a){this.cfg=this.cfg.extend(a),this.reset()},reset:function(){k.reset.call(this),this._doReset()},update:function(a){return this._append(a),this._process(),this},finalize:function(a){a&&this._append(a);var b=this._doFinalize();return b},blockSize:16,_createHelper:function(a){return function(b,c){return new a.init(c).finalize(b)}},_createHmacHelper:function(a){return function(b,c){return new l.HMAC.init(a,c).finalize(b)}}}),c.algo={});return c}(Math);CryptoJS.lib.Cipher||function(a){var b=CryptoJS,c=b.lib,d=c.Base,e=c.WordArray,f=c.BufferedBlockAlgorithm,g=b.enc,h=(g.Utf8,g.Base64),i=b.algo,j=i.EvpKDF,k=c.Cipher=f.extend({cfg:d.extend(),createEncryptor:function(a,b){return this.create(this._ENC_XFORM_MODE,a,b)},createDecryptor:function(a,b){return this.create(this._DEC_XFORM_MODE,a,b)},init:function(a,b,c){this.cfg=this.cfg.extend(c),this._xformMode=a,this._key=b,this.reset()},reset:function(){f.reset.call(this),this._doReset()},process:function(a){return this._append(a),this._process()},finalize:function(a){a&&this._append(a);var b=this._doFinalize();return b},keySize:4,ivSize:4,_ENC_XFORM_MODE:1,_DEC_XFORM_MODE:2,_createHelper:function(){function a(a){return"string"==typeof a?w:t}return function(b){return{encrypt:function(c,d,e){return a(d).encrypt(b,c,d,e)},decrypt:function(c,d,e){return a(d).decrypt(b,c,d,e)}}}}()}),l=(c.StreamCipher=k.extend({_doFinalize:function(){var a=this._process(!0);return a},blockSize:1}),b.mode={}),m=c.BlockCipherMode=d.extend({createEncryptor:function(a,b){return this.Encryptor.create(a,b)},createDecryptor:function(a,b){return this.Decryptor.create(a,b)},init:function(a,b){this._cipher=a,this._iv=b}}),n=l.CBC=function(){function b(b,c,d){var e=this._iv;if(e){var f=e;this._iv=a}else var f=this._prevBlock;for(var g=0;d>g;g++)b[c+g]^=f[g]}var c=m.extend();return c.Encryptor=c.extend({processBlock:function(a,c){var d=this._cipher,e=d.blockSize;b.call(this,a,c,e),d.encryptBlock(a,c),this._prevBlock=a.slice(c,c+e)}}),c.Decryptor=c.extend({processBlock:function(a,c){var d=this._cipher,e=d.blockSize,f=a.slice(c,c+e);d.decryptBlock(a,c),b.call(this,a,c,e),this._prevBlock=f}}),c}(),o=(l.IGE=function(){function b(a,b,c,d){for(var e=0;d>e;e++)a[c+e]^=b[e]}var c=m.extend();return c.Encryptor=c.extend({processBlock:function(c,d){var e=this._cipher,f=e.blockSize;this._ivp===a&&(this._ivp=this._iv.slice(0,f),this._iv2p=this._iv.slice(f,f+f));var g=c.slice(d,d+f);b(c,this._ivp,d,f),e.encryptBlock(c,d),b(c,this._iv2p,d,f),this._ivp=c.slice(d,d+f),this._iv2p=g}}),c.Decryptor=c.extend({processBlock:function(c,d){var e=this._cipher,f=e.blockSize;this._ivp===a&&(this._ivp=this._iv.slice(0,f),this._iv2p=this._iv.slice(f,2*f));var g=c.slice(d,d+f);b(c,this._iv2p,d,f),e.decryptBlock(c,d),b(c,this._ivp,d,f),this._ivp=g,this._iv2p=c.slice(d,d+f)}}),c}(),b.pad={}),p=o.Pkcs7={pad:function(a,b){for(var c=4*b,d=c-a.sigBytes%c,f=d<<24|d<<16|d<<8|d,g=[],h=0;d>h;h+=4)g.push(f);var i=e.create(g,d);a.concat(i)},unpad:function(a){var b=255&a.words[a.sigBytes-1>>>2];a.sigBytes-=b}},q=(o.NoPadding={pad:function(){},unpad:function(){}},c.BlockCipher=k.extend({cfg:k.cfg.extend({mode:n,padding:p}),reset:function(){k.reset.call(this);var a=this.cfg,b=a.iv,c=a.mode;if(this._xformMode==this._ENC_XFORM_MODE)var d=c.createEncryptor;else{var d=c.createDecryptor;this._minBufferSize=1}this._mode=d.call(c,this,b&&b.words)},_doProcessBlock:function(a,b){this._mode.processBlock(a,b)},_doFinalize:function(){var a=this.cfg.padding;if(this._xformMode==this._ENC_XFORM_MODE){a.pad(this._data,this.blockSize);var b=this._process(!0)}else{var b=this._process(!0);a.unpad(b)}return b},blockSize:4}),c.CipherParams=d.extend({init:function(a){this.mixIn(a)},toString:function(a){return(a||this.formatter).stringify(this)}})),r=b.format={},s=r.OpenSSL={stringify:function(a){var b=a.ciphertext,c=a.salt;if(c)var d=e.create([1398893684,1701076831]).concat(c).concat(b);else var d=b;return d.toString(h)},parse:function(a){var b=h.parse(a),c=b.words;if(1398893684==c[0]&&1701076831==c[1]){var d=e.create(c.slice(2,4));c.splice(0,4),b.sigBytes-=16}return q.create({ciphertext:b,salt:d})}},t=c.SerializableCipher=d.extend({cfg:d.extend({format:s}),encrypt:function(a,b,c,d){d=this.cfg.extend(d);var e=a.createEncryptor(c,d),f=e.finalize(b),g=e.cfg;return q.create({ciphertext:f,key:c,iv:g.iv,algorithm:a,mode:g.mode,padding:g.padding,blockSize:a.blockSize,formatter:d.format})},decrypt:function(a,b,c,d){d=this.cfg.extend(d),b=this._parse(b,d.format);var e=a.createDecryptor(c,d).finalize(b.ciphertext);return e},_parse:function(a,b){return"string"==typeof a?b.parse(a,this):a}}),u=b.kdf={},v=u.OpenSSL={execute:function(a,b,c,d){d||(d=e.random(8));var f=j.create({keySize:b+c}).compute(a,d),g=e.create(f.words.slice(b),4*c);return f.sigBytes=4*b,q.create({key:f,iv:g,salt:d})}},w=c.PasswordBasedCipher=t.extend({cfg:t.cfg.extend({kdf:v}),encrypt:function(a,b,c,d){d=this.cfg.extend(d);var e=d.kdf.execute(c,a.keySize,a.ivSize);d.iv=e.iv;var f=t.encrypt.call(this,a,b,e.key,d);return f.mixIn(e),f},decrypt:function(a,b,c,d){d=this.cfg.extend(d),b=this._parse(b,d.format);var e=d.kdf.execute(c,a.keySize,a.ivSize,b.salt);d.iv=e.iv;var f=t.decrypt.call(this,a,b,e.key,d);return f}})}(),function(){var a=CryptoJS,b=a.lib,c=b.BlockCipher,d=a.algo,e=[],f=[],g=[],h=[],i=[],j=[],k=[],l=[],m=[],n=[];!function(){for(var a=[],b=0;256>b;b++)128>b?a[b]=b<<1:a[b]=b<<1^283;for(var c=0,d=0,b=0;256>b;b++){var o=d^d<<1^d<<2^d<<3^d<<4;o=o>>>8^255&o^99,e[c]=o,f[o]=c;var p=a[c],q=a[p],r=a[q],s=257*a[o]^16843008*o;g[c]=s<<24|s>>>8,h[c]=s<<16|s>>>16,i[c]=s<<8|s>>>24,j[c]=s;var s=16843009*r^65537*q^257*p^16843008*c;k[o]=s<<24|s>>>8,l[o]=s<<16|s>>>16,m[o]=s<<8|s>>>24,n[o]=s,c?(c=p^a[a[a[r^p]]],d^=a[a[d]]):c=d=1}}();var o=[0,1,2,4,8,16,32,64,128,27,54],p=d.AES=c.extend({_doReset:function(){for(var a=this._key,b=a.words,c=a.sigBytes/4,d=this._nRounds=c+6,f=4*(d+1),g=this._keySchedule=[],h=0;f>h;h++)if(c>h)g[h]=b[h];else{var i=g[h-1];h%c?c>6&&h%c==4&&(i=e[i>>>24]<<24|e[i>>>16&255]<<16|e[i>>>8&255]<<8|e[255&i]):(i=i<<8|i>>>24,i=e[i>>>24]<<24|e[i>>>16&255]<<16|e[i>>>8&255]<<8|e[255&i],i^=o[h/c|0]<<24),g[h]=g[h-c]^i}for(var j=this._invKeySchedule=[],p=0;f>p;p++){var h=f-p;if(p%4)var i=g[h];else var i=g[h-4];4>p||4>=h?j[p]=i:j[p]=k[e[i>>>24]]^l[e[i>>>16&255]]^m[e[i>>>8&255]]^n[e[255&i]]}},encryptBlock:function(a,b){this._doCryptBlock(a,b,this._keySchedule,g,h,i,j,e)},decryptBlock:function(a,b){var c=a[b+1];a[b+1]=a[b+3],a[b+3]=c,this._doCryptBlock(a,b,this._invKeySchedule,k,l,m,n,f);var c=a[b+1];a[b+1]=a[b+3],a[b+3]=c},_doCryptBlock:function(a,b,c,d,e,f,g,h){for(var i=this._nRounds,j=a[b]^c[0],k=a[b+1]^c[1],l=a[b+2]^c[2],m=a[b+3]^c[3],n=4,o=1;i>o;o++){var p=d[j>>>24]^e[k>>>16&255]^f[l>>>8&255]^g[255&m]^c[n++],q=d[k>>>24]^e[l>>>16&255]^f[m>>>8&255]^g[255&j]^c[n++],r=d[l>>>24]^e[m>>>16&255]^f[j>>>8&255]^g[255&k]^c[n++],s=d[m>>>24]^e[j>>>16&255]^f[k>>>8&255]^g[255&l]^c[n++];j=p,k=q,l=r,m=s}var p=(h[j>>>24]<<24|h[k>>>16&255]<<16|h[l>>>8&255]<<8|h[255&m])^c[n++],q=(h[k>>>24]<<24|h[l>>>16&255]<<16|h[m>>>8&255]<<8|h[255&j])^c[n++],r=(h[l>>>24]<<24|h[m>>>16&255]<<16|h[j>>>8&255]<<8|h[255&k])^c[n++],s=(h[m>>>24]<<24|h[j>>>16&255]<<16|h[k>>>8&255]<<8|h[255&l])^c[n++];a[b]=p,a[b+1]=q,a[b+2]=r,a[b+3]=s},keySize:8});a.AES=c._createHelper(p)}(),function(a){var b=CryptoJS,c=b.lib,d=c.WordArray,e=c.Hasher,f=b.algo,g=[],h=[];!function(){function b(b){for(var c=a.sqrt(b),d=2;c>=d;d++)if(!(b%d))return!1;return!0}function c(a){return 4294967296*(a-(0|a))|0}for(var d=2,e=0;64>e;)b(d)&&(8>e&&(g[e]=c(a.pow(d,.5))),h[e]=c(a.pow(d,1/3)),e++),d++}();var i=[],j=f.SHA256=e.extend({_doReset:function(){this._hash=new d.init(g.slice(0))},_doProcessBlock:function(a,b){for(var c=this._hash.words,d=c[0],e=c[1],f=c[2],g=c[3],j=c[4],k=c[5],l=c[6],m=c[7],n=0;64>n;n++){if(16>n)i[n]=0|a[b+n];else{var o=i[n-15],p=(o<<25|o>>>7)^(o<<14|o>>>18)^o>>>3,q=i[n-2],r=(q<<15|q>>>17)^(q<<13|q>>>19)^q>>>10;i[n]=p+i[n-7]+r+i[n-16]}var s=j&k^~j&l,t=d&e^d&f^e&f,u=(d<<30|d>>>2)^(d<<19|d>>>13)^(d<<10|d>>>22),v=(j<<26|j>>>6)^(j<<21|j>>>11)^(j<<7|j>>>25),w=m+v+s+h[n]+i[n],x=u+t;m=l,l=k,k=j,j=g+w|0,g=f,f=e,e=d,d=w+x|0}c[0]=c[0]+d|0,c[1]=c[1]+e|0,c[2]=c[2]+f|0,c[3]=c[3]+g|0,c[4]=c[4]+j|0,c[5]=c[5]+k|0,c[6]=c[6]+l|0,c[7]=c[7]+m|0},_doFinalize:function(){var b=this._data,c=b.words,d=8*this._nDataBytes,e=8*b.sigBytes;return c[e>>>5]|=128<<24-e%32,c[(e+64>>>9<<4)+14]=a.floor(d/4294967296),c[(e+64>>>9<<4)+15]=d,b.sigBytes=4*c.length,this._process(),this._hash},clone:function(){var a=e.clone.call(this);return a._hash=this._hash.clone(),a}});b.SHA256=e._createHelper(j),b.HmacSHA256=e._createHmacHelper(j)}(Math);
 function BigInteger(a,b,c){null!=a&&("number"==typeof a?this.fromNumber(a,b,c):null==b&&"string"!=typeof a?this.fromString(a,256):this.fromString(a,b))}function nbi(){return new BigInteger(null)}function am1(a,b,c,d,e,f){for(;--f>=0;){var g=b*this[a++]+c[d]+e;e=Math.floor(g/67108864),c[d++]=67108863&g}return e}function am2(a,b,c,d,e,f){for(var g=32767&b,h=b>>15;--f>=0;){var i=32767&this[a],j=this[a++]>>15,k=h*i+j*g;i=g*i+((32767&k)<<15)+c[d]+(1073741823&e),e=(i>>>30)+(k>>>15)+h*j+(e>>>30),c[d++]=1073741823&i}return e}function am3(a,b,c,d,e,f){for(var g=16383&b,h=b>>14;--f>=0;){var i=16383&this[a],j=this[a++]>>14,k=h*i+j*g;i=g*i+((16383&k)<<14)+c[d]+e,e=(i>>28)+(k>>14)+h*j,c[d++]=268435455&i}return e}function int2char(a){return BI_RM.charAt(a)}function intAt(a,b){var c=BI_RC[a.charCodeAt(b)];return null==c?-1:c}function bnpCopyTo(a){for(var b=this.t-1;b>=0;--b)a[b]=this[b];a.t=this.t,a.s=this.s}function bnpFromInt(a){this.t=1,this.s=0>a?-1:0,a>0?this[0]=a:-1>a?this[0]=a+this.DV:this.t=0}function nbv(a){var b=nbi();return b.fromInt(a),b}function bnpFromString(a,b,c){var d;if(16==b)d=4;else if(8==b)d=3;else if(256==b)d=8;else if(2==b)d=1;else if(32==b)d=5;else{if(4!=b)return void this.fromRadix(a,b);d=2}this.t=0,this.s=0;for(var e=a.length,f=!1,g=0;--e>=0;){var h=8==d?255&a[e]:intAt(a,e);0>h?"-"==a.charAt(e)&&(f=!0):(f=!1,0==g?this[this.t++]=h:g+d>this.DB?(this[this.t-1]|=(h&(1<<this.DB-g)-1)<<g,this[this.t++]=h>>this.DB-g):this[this.t-1]|=h<<g,g+=d,g>=this.DB&&(g-=this.DB))}8==d&&0!=(128&a[0])&&c&&(this.s=-1,g>0&&(this[this.t-1]|=(1<<this.DB-g)-1<<g)),this.clamp(),f&&BigInteger.ZERO.subTo(this,this)}function bnpClamp(){for(var a=this.s&this.DM;this.t>0&&this[this.t-1]==a;)--this.t}function bnToString(a){if(this.s<0)return"-"+this.negate().toString(a);var b;if(16==a)b=4;else if(8==a)b=3;else if(2==a)b=1;else if(32==a)b=5;else{if(4!=a)return this.toRadix(a);b=2}var c,d=(1<<b)-1,e=!1,f="",g=this.t,h=this.DB-g*this.DB%b;if(g-- >0)for(h<this.DB&&(c=this[g]>>h)>0&&(e=!0,f=int2char(c));g>=0;)b>h?(c=(this[g]&(1<<h)-1)<<b-h,c|=this[--g]>>(h+=this.DB-b)):(c=this[g]>>(h-=b)&d,0>=h&&(h+=this.DB,--g)),c>0&&(e=!0),e&&(f+=int2char(c));return e?f:"0"}function bnNegate(){var a=nbi();return BigInteger.ZERO.subTo(this,a),a}function bnAbs(){return this.s<0?this.negate():this}function bnCompareTo(a){var b=this.s-a.s;if(0!=b)return b;var c=this.t;if(b=c-a.t,0!=b)return this.s<0?-b:b;for(;--c>=0;)if(0!=(b=this[c]-a[c]))return b;return 0}function nbits(a){var b,c=1;return 0!=(b=a>>>16)&&(a=b,c+=16),0!=(b=a>>8)&&(a=b,c+=8),0!=(b=a>>4)&&(a=b,c+=4),0!=(b=a>>2)&&(a=b,c+=2),0!=(b=a>>1)&&(a=b,c+=1),c}function bnBitLength(){return this.t<=0?0:this.DB*(this.t-1)+nbits(this[this.t-1]^this.s&this.DM)}function bnpDLShiftTo(a,b){var c;for(c=this.t-1;c>=0;--c)b[c+a]=this[c];for(c=a-1;c>=0;--c)b[c]=0;b.t=this.t+a,b.s=this.s}function bnpDRShiftTo(a,b){for(var c=a;c<this.t;++c)b[c-a]=this[c];b.t=Math.max(this.t-a,0),b.s=this.s}function bnpLShiftTo(a,b){var c,d=a%this.DB,e=this.DB-d,f=(1<<e)-1,g=Math.floor(a/this.DB),h=this.s<<d&this.DM;for(c=this.t-1;c>=0;--c)b[c+g+1]=this[c]>>e|h,h=(this[c]&f)<<d;for(c=g-1;c>=0;--c)b[c]=0;b[g]=h,b.t=this.t+g+1,b.s=this.s,b.clamp()}function bnpRShiftTo(a,b){b.s=this.s;var c=Math.floor(a/this.DB);if(c>=this.t)return void(b.t=0);var d=a%this.DB,e=this.DB-d,f=(1<<d)-1;b[0]=this[c]>>d;for(var g=c+1;g<this.t;++g)b[g-c-1]|=(this[g]&f)<<e,b[g-c]=this[g]>>d;d>0&&(b[this.t-c-1]|=(this.s&f)<<e),b.t=this.t-c,b.clamp()}function bnpSubTo(a,b){for(var c=0,d=0,e=Math.min(a.t,this.t);e>c;)d+=this[c]-a[c],b[c++]=d&this.DM,d>>=this.DB;if(a.t<this.t){for(d-=a.s;c<this.t;)d+=this[c],b[c++]=d&this.DM,d>>=this.DB;d+=this.s}else{for(d+=this.s;c<a.t;)d-=a[c],b[c++]=d&this.DM,d>>=this.DB;d-=a.s}b.s=0>d?-1:0,-1>d?b[c++]=this.DV+d:d>0&&(b[c++]=d),b.t=c,b.clamp()}function bnpMultiplyTo(a,b){var c=this.abs(),d=a.abs(),e=c.t;for(b.t=e+d.t;--e>=0;)b[e]=0;for(e=0;e<d.t;++e)b[e+c.t]=c.am(0,d[e],b,e,0,c.t);b.s=0,b.clamp(),this.s!=a.s&&BigInteger.ZERO.subTo(b,b)}function bnpSquareTo(a){for(var b=this.abs(),c=a.t=2*b.t;--c>=0;)a[c]=0;for(c=0;c<b.t-1;++c){var d=b.am(c,b[c],a,2*c,0,1);(a[c+b.t]+=b.am(c+1,2*b[c],a,2*c+1,d,b.t-c-1))>=b.DV&&(a[c+b.t]-=b.DV,a[c+b.t+1]=1)}a.t>0&&(a[a.t-1]+=b.am(c,b[c],a,2*c,0,1)),a.s=0,a.clamp()}function bnpDivRemTo(a,b,c){var d=a.abs();if(!(d.t<=0)){var e=this.abs();if(e.t<d.t)return null!=b&&b.fromInt(0),void(null!=c&&this.copyTo(c));null==c&&(c=nbi());var f=nbi(),g=this.s,h=a.s,i=this.DB-nbits(d[d.t-1]);i>0?(d.lShiftTo(i,f),e.lShiftTo(i,c)):(d.copyTo(f),e.copyTo(c));var j=f.t,k=f[j-1];if(0!=k){var l=k*(1<<this.F1)+(j>1?f[j-2]>>this.F2:0),m=this.FV/l,n=(1<<this.F1)/l,o=1<<this.F2,p=c.t,q=p-j,r=null==b?nbi():b;for(f.dlShiftTo(q,r),c.compareTo(r)>=0&&(c[c.t++]=1,c.subTo(r,c)),BigInteger.ONE.dlShiftTo(j,r),r.subTo(f,f);f.t<j;)f[f.t++]=0;for(;--q>=0;){var s=c[--p]==k?this.DM:Math.floor(c[p]*m+(c[p-1]+o)*n);if((c[p]+=f.am(0,s,c,q,0,j))<s)for(f.dlShiftTo(q,r),c.subTo(r,c);c[p]<--s;)c.subTo(r,c)}null!=b&&(c.drShiftTo(j,b),g!=h&&BigInteger.ZERO.subTo(b,b)),c.t=j,c.clamp(),i>0&&c.rShiftTo(i,c),0>g&&BigInteger.ZERO.subTo(c,c)}}}function bnMod(a){var b=nbi();return this.abs().divRemTo(a,null,b),this.s<0&&b.compareTo(BigInteger.ZERO)>0&&a.subTo(b,b),b}function Classic(a){this.m=a}function cConvert(a){return a.s<0||a.compareTo(this.m)>=0?a.mod(this.m):a}function cRevert(a){return a}function cReduce(a){a.divRemTo(this.m,null,a)}function cMulTo(a,b,c){a.multiplyTo(b,c),this.reduce(c)}function cSqrTo(a,b){a.squareTo(b),this.reduce(b)}function bnpInvDigit(){if(this.t<1)return 0;var a=this[0];if(0==(1&a))return 0;var b=3&a;return b=b*(2-(15&a)*b)&15,b=b*(2-(255&a)*b)&255,b=b*(2-((65535&a)*b&65535))&65535,b=b*(2-a*b%this.DV)%this.DV,b>0?this.DV-b:-b}function Montgomery(a){this.m=a,this.mp=a.invDigit(),this.mpl=32767&this.mp,this.mph=this.mp>>15,this.um=(1<<a.DB-15)-1,this.mt2=2*a.t}function montConvert(a){var b=nbi();return a.abs().dlShiftTo(this.m.t,b),b.divRemTo(this.m,null,b),a.s<0&&b.compareTo(BigInteger.ZERO)>0&&this.m.subTo(b,b),b}function montRevert(a){var b=nbi();return a.copyTo(b),this.reduce(b),b}function montReduce(a){for(;a.t<=this.mt2;)a[a.t++]=0;for(var b=0;b<this.m.t;++b){var c=32767&a[b],d=c*this.mpl+((c*this.mph+(a[b]>>15)*this.mpl&this.um)<<15)&a.DM;for(c=b+this.m.t,a[c]+=this.m.am(0,d,a,b,0,this.m.t);a[c]>=a.DV;)a[c]-=a.DV,a[++c]++}a.clamp(),a.drShiftTo(this.m.t,a),a.compareTo(this.m)>=0&&a.subTo(this.m,a)}function montSqrTo(a,b){a.squareTo(b),this.reduce(b)}function montMulTo(a,b,c){a.multiplyTo(b,c),this.reduce(c)}function bnpIsEven(){return 0==(this.t>0?1&this[0]:this.s)}function bnpExp(a,b){if(a>4294967295||1>a)return BigInteger.ONE;var c=nbi(),d=nbi(),e=b.convert(this),f=nbits(a)-1;for(e.copyTo(c);--f>=0;)if(b.sqrTo(c,d),(a&1<<f)>0)b.mulTo(d,e,c);else{var g=c;c=d,d=g}return b.revert(c)}function bnModPowInt(a,b){var c;return c=256>a||b.isEven()?new Classic(b):new Montgomery(b),this.exp(a,c)}function bnClone(){var a=nbi();return this.copyTo(a),a}function bnIntValue(){if(this.s<0){if(1==this.t)return this[0]-this.DV;if(0==this.t)return-1}else{if(1==this.t)return this[0];if(0==this.t)return 0}return(this[1]&(1<<32-this.DB)-1)<<this.DB|this[0]}function bnByteValue(){return 0==this.t?this.s:this[0]<<24>>24}function bnShortValue(){return 0==this.t?this.s:this[0]<<16>>16}function bnpChunkSize(a){return Math.floor(Math.LN2*this.DB/Math.log(a))}function bnSigNum(){return this.s<0?-1:this.t<=0||1==this.t&&this[0]<=0?0:1}function bnpToRadix(a){if(null==a&&(a=10),0==this.signum()||2>a||a>36)return"0";var b=this.chunkSize(a),c=Math.pow(a,b),d=nbv(c),e=nbi(),f=nbi(),g="";for(this.divRemTo(d,e,f);e.signum()>0;)g=(c+f.intValue()).toString(a).substr(1)+g,e.divRemTo(d,e,f);return f.intValue().toString(a)+g}function bnpFromRadix(a,b){this.fromInt(0),null==b&&(b=10);for(var c=this.chunkSize(b),d=Math.pow(b,c),e=!1,f=0,g=0,h=0;h<a.length;++h){var i=intAt(a,h);0>i?"-"==a.charAt(h)&&0==this.signum()&&(e=!0):(g=b*g+i,++f>=c&&(this.dMultiply(d),this.dAddOffset(g,0),f=0,g=0))}f>0&&(this.dMultiply(Math.pow(b,f)),this.dAddOffset(g,0)),e&&BigInteger.ZERO.subTo(this,this)}function bnpFromNumber(a,b,c){if("number"==typeof b)if(2>a)this.fromInt(1);else for(this.fromNumber(a,c),this.testBit(a-1)||this.bitwiseTo(BigInteger.ONE.shiftLeft(a-1),op_or,this),this.isEven()&&this.dAddOffset(1,0);!this.isProbablePrime(b);)this.dAddOffset(2,0),this.bitLength()>a&&this.subTo(BigInteger.ONE.shiftLeft(a-1),this);else{var d=new Array,e=7&a;d.length=(a>>3)+1,b.nextBytes(d),e>0?d[0]&=(1<<e)-1:d[0]=0,this.fromString(d,256)}}function bnToByteArray(a){var b=this.t,c=new Array;c[0]=this.s;var d,e=this.DB-b*this.DB%8,f=0;if(b-- >0)for(e<this.DB&&(d=this[b]>>e)!=(this.s&this.DM)>>e&&(c[f++]=d|this.s<<this.DB-e);b>=0;)8>e?(d=(this[b]&(1<<e)-1)<<8-e,d|=this[--b]>>(e+=this.DB-8)):(d=this[b]>>(e-=8)&255,0>=e&&(e+=this.DB,--b)),a&&0!=(128&d)&&(d|=-256),0==f&&(128&this.s)!=(128&d)&&++f,(f>0||d!=this.s)&&(c[f++]=d);return c}function bnEquals(a){return 0==this.compareTo(a)}function bnMin(a){return this.compareTo(a)<0?this:a}function bnMax(a){return this.compareTo(a)>0?this:a}function bnpBitwiseTo(a,b,c){var d,e,f=Math.min(a.t,this.t);for(d=0;f>d;++d)c[d]=b(this[d],a[d]);if(a.t<this.t){for(e=a.s&this.DM,d=f;d<this.t;++d)c[d]=b(this[d],e);c.t=this.t}else{for(e=this.s&this.DM,d=f;d<a.t;++d)c[d]=b(e,a[d]);c.t=a.t}c.s=b(this.s,a.s),c.clamp()}function op_and(a,b){return a&b}function bnAnd(a){var b=nbi();return this.bitwiseTo(a,op_and,b),b}function op_or(a,b){return a|b}function bnOr(a){var b=nbi();return this.bitwiseTo(a,op_or,b),b}function op_xor(a,b){return a^b}function bnXor(a){var b=nbi();return this.bitwiseTo(a,op_xor,b),b}function op_andnot(a,b){return a&~b}function bnAndNot(a){var b=nbi();return this.bitwiseTo(a,op_andnot,b),b}function bnNot(){for(var a=nbi(),b=0;b<this.t;++b)a[b]=this.DM&~this[b];return a.t=this.t,a.s=~this.s,a}function bnShiftLeft(a){var b=nbi();return 0>a?this.rShiftTo(-a,b):this.lShiftTo(a,b),b}function bnShiftRight(a){var b=nbi();return 0>a?this.lShiftTo(-a,b):this.rShiftTo(a,b),b}function lbit(a){if(0==a)return-1;var b=0;return 0==(65535&a)&&(a>>=16,b+=16),0==(255&a)&&(a>>=8,b+=8),0==(15&a)&&(a>>=4,b+=4),0==(3&a)&&(a>>=2,b+=2),0==(1&a)&&++b,b}function bnGetLowestSetBit(){for(var a=0;a<this.t;++a)if(0!=this[a])return a*this.DB+lbit(this[a]);return this.s<0?this.t*this.DB:-1}function cbit(a){for(var b=0;0!=a;)a&=a-1,++b;return b}function bnBitCount(){for(var a=0,b=this.s&this.DM,c=0;c<this.t;++c)a+=cbit(this[c]^b);return a}function bnTestBit(a){var b=Math.floor(a/this.DB);return b>=this.t?0!=this.s:0!=(this[b]&1<<a%this.DB)}function bnpChangeBit(a,b){var c=BigInteger.ONE.shiftLeft(a);return this.bitwiseTo(c,b,c),c}function bnSetBit(a){return this.changeBit(a,op_or)}function bnClearBit(a){return this.changeBit(a,op_andnot)}function bnFlipBit(a){return this.changeBit(a,op_xor)}function bnpAddTo(a,b){for(var c=0,d=0,e=Math.min(a.t,this.t);e>c;)d+=this[c]+a[c],b[c++]=d&this.DM,d>>=this.DB;if(a.t<this.t){for(d+=a.s;c<this.t;)d+=this[c],b[c++]=d&this.DM,d>>=this.DB;d+=this.s}else{for(d+=this.s;c<a.t;)d+=a[c],b[c++]=d&this.DM,d>>=this.DB;d+=a.s}b.s=0>d?-1:0,d>0?b[c++]=d:-1>d&&(b[c++]=this.DV+d),b.t=c,b.clamp()}function bnAdd(a){var b=nbi();return this.addTo(a,b),b}function bnSubtract(a){var b=nbi();return this.subTo(a,b),b}function bnMultiply(a){var b=nbi();return this.multiplyTo(a,b),b}function bnSquare(){var a=nbi();return this.squareTo(a),a}function bnDivide(a){var b=nbi();return this.divRemTo(a,b,null),b}function bnRemainder(a){var b=nbi();return this.divRemTo(a,null,b),b}function bnDivideAndRemainder(a){var b=nbi(),c=nbi();return this.divRemTo(a,b,c),new Array(b,c)}function bnpDMultiply(a){this[this.t]=this.am(0,a-1,this,0,0,this.t),++this.t,this.clamp()}function bnpDAddOffset(a,b){if(0!=a){for(;this.t<=b;)this[this.t++]=0;for(this[b]+=a;this[b]>=this.DV;)this[b]-=this.DV,++b>=this.t&&(this[this.t++]=0),++this[b]}}function NullExp(){}function nNop(a){return a}function nMulTo(a,b,c){a.multiplyTo(b,c)}function nSqrTo(a,b){a.squareTo(b)}function bnPow(a){return this.exp(a,new NullExp)}function bnpMultiplyLowerTo(a,b,c){var d=Math.min(this.t+a.t,b);for(c.s=0,c.t=d;d>0;)c[--d]=0;var e;for(e=c.t-this.t;e>d;++d)c[d+this.t]=this.am(0,a[d],c,d,0,this.t);for(e=Math.min(a.t,b);e>d;++d)this.am(0,a[d],c,d,0,b-d);c.clamp()}function bnpMultiplyUpperTo(a,b,c){--b;var d=c.t=this.t+a.t-b;for(c.s=0;--d>=0;)c[d]=0;for(d=Math.max(b-this.t,0);d<a.t;++d)c[this.t+d-b]=this.am(b-d,a[d],c,0,0,this.t+d-b);c.clamp(),c.drShiftTo(1,c)}function Barrett(a){this.r2=nbi(),this.q3=nbi(),BigInteger.ONE.dlShiftTo(2*a.t,this.r2),this.mu=this.r2.divide(a),this.m=a}function barrettConvert(a){if(a.s<0||a.t>2*this.m.t)return a.mod(this.m);if(a.compareTo(this.m)<0)return a;var b=nbi();return a.copyTo(b),this.reduce(b),b}function barrettRevert(a){return a}function barrettReduce(a){for(a.drShiftTo(this.m.t-1,this.r2),a.t>this.m.t+1&&(a.t=this.m.t+1,a.clamp()),this.mu.multiplyUpperTo(this.r2,this.m.t+1,this.q3),this.m.multiplyLowerTo(this.q3,this.m.t+1,this.r2);a.compareTo(this.r2)<0;)a.dAddOffset(1,this.m.t+1);for(a.subTo(this.r2,a);a.compareTo(this.m)>=0;)a.subTo(this.m,a)}function barrettSqrTo(a,b){a.squareTo(b),this.reduce(b)}function barrettMulTo(a,b,c){a.multiplyTo(b,c),this.reduce(c)}function bnModPow(a,b){var c,d,e=a.bitLength(),f=nbv(1);if(0>=e)return f;c=18>e?1:48>e?3:144>e?4:768>e?5:6,d=8>e?new Classic(b):b.isEven()?new Barrett(b):new Montgomery(b);var g=new Array,h=3,i=c-1,j=(1<<c)-1;if(g[1]=d.convert(this),c>1){var k=nbi();for(d.sqrTo(g[1],k);j>=h;)g[h]=nbi(),d.mulTo(k,g[h-2],g[h]),h+=2}var l,m,n=a.t-1,o=!0,p=nbi();for(e=nbits(a[n])-1;n>=0;){for(e>=i?l=a[n]>>e-i&j:(l=(a[n]&(1<<e+1)-1)<<i-e,n>0&&(l|=a[n-1]>>this.DB+e-i)),h=c;0==(1&l);)l>>=1,--h;if((e-=h)<0&&(e+=this.DB,--n),o)g[l].copyTo(f),o=!1;else{for(;h>1;)d.sqrTo(f,p),d.sqrTo(p,f),h-=2;h>0?d.sqrTo(f,p):(m=f,f=p,p=m),d.mulTo(p,g[l],f)}for(;n>=0&&0==(a[n]&1<<e);)d.sqrTo(f,p),m=f,f=p,p=m,--e<0&&(e=this.DB-1,--n)}return d.revert(f)}function bnGCD(a){var b=this.s<0?this.negate():this.clone(),c=a.s<0?a.negate():a.clone();if(b.compareTo(c)<0){var d=b;b=c,c=d}var e=b.getLowestSetBit(),f=c.getLowestSetBit();if(0>f)return b;for(f>e&&(f=e),f>0&&(b.rShiftTo(f,b),c.rShiftTo(f,c));b.signum()>0;)(e=b.getLowestSetBit())>0&&b.rShiftTo(e,b),(e=c.getLowestSetBit())>0&&c.rShiftTo(e,c),b.compareTo(c)>=0?(b.subTo(c,b),b.rShiftTo(1,b)):(c.subTo(b,c),c.rShiftTo(1,c));return f>0&&c.lShiftTo(f,c),c}function bnpModInt(a){if(0>=a)return 0;var b=this.DV%a,c=this.s<0?a-1:0;if(this.t>0)if(0==b)c=this[0]%a;else for(var d=this.t-1;d>=0;--d)c=(b*c+this[d])%a;return c}function bnModInverse(a){var b=a.isEven();if(this.isEven()&&b||0==a.signum())return BigInteger.ZERO;for(var c=a.clone(),d=this.clone(),e=nbv(1),f=nbv(0),g=nbv(0),h=nbv(1);0!=c.signum();){for(;c.isEven();)c.rShiftTo(1,c),b?(e.isEven()&&f.isEven()||(e.addTo(this,e),f.subTo(a,f)),e.rShiftTo(1,e)):f.isEven()||f.subTo(a,f),f.rShiftTo(1,f);for(;d.isEven();)d.rShiftTo(1,d),b?(g.isEven()&&h.isEven()||(g.addTo(this,g),h.subTo(a,h)),g.rShiftTo(1,g)):h.isEven()||h.subTo(a,h),h.rShiftTo(1,h);c.compareTo(d)>=0?(c.subTo(d,c),b&&e.subTo(g,e),f.subTo(h,f)):(d.subTo(c,d),b&&g.subTo(e,g),h.subTo(f,h))}return 0!=d.compareTo(BigInteger.ONE)?BigInteger.ZERO:h.compareTo(a)>=0?h.subtract(a):h.signum()<0?(h.addTo(a,h),h.signum()<0?h.add(a):h):h}function bnIsProbablePrime(a){var b,c=this.abs();if(1==c.t&&c[0]<=lowprimes[lowprimes.length-1]){for(b=0;b<lowprimes.length;++b)if(c[0]==lowprimes[b])return!0;return!1}if(c.isEven())return!1;for(b=1;b<lowprimes.length;){for(var d=lowprimes[b],e=b+1;e<lowprimes.length&&lplim>d;)d*=lowprimes[e++];for(d=c.modInt(d);e>b;)if(d%lowprimes[b++]==0)return!1}return c.millerRabin(a)}function bnpMillerRabin(a){var b=this.subtract(BigInteger.ONE),c=b.getLowestSetBit();if(0>=c)return!1;var d=b.shiftRight(c);a=a+1>>1,a>lowprimes.length&&(a=lowprimes.length);for(var e=nbi(),f=0;a>f;++f){e.fromInt(lowprimes[Math.floor(Math.random()*lowprimes.length)]);var g=e.modPow(d,this);if(0!=g.compareTo(BigInteger.ONE)&&0!=g.compareTo(b)){for(var h=1;h++<c&&0!=g.compareTo(b);)if(g=g.modPowInt(2,this),0==g.compareTo(BigInteger.ONE))return!1;if(0!=g.compareTo(b))return!1}}return!0}function rng_seed_int(a){rng_pool[rng_pptr++]^=255&a,rng_pool[rng_pptr++]^=a>>8&255,rng_pool[rng_pptr++]^=a>>16&255,rng_pool[rng_pptr++]^=a>>24&255,rng_pptr>=rng_psize&&(rng_pptr-=rng_psize)}function rng_seed_time(){rng_seed_int((new Date).getTime())}function rng_get_byte(){if(null==rng_state){for(rng_seed_time(),rng_state=prng_newstate(),rng_state.init(rng_pool),rng_pptr=0;rng_pptr<rng_pool.length;++rng_pptr)rng_pool[rng_pptr]=0;rng_pptr=0}return rng_state.next()}function rng_get_bytes(a){var b;for(b=0;b<a.length;++b)a[b]=rng_get_byte()}function SecureRandom(){}function Arcfour(){this.i=0,this.j=0,this.S=new Array}function ARC4init(a){var b,c,d;for(b=0;256>b;++b)this.S[b]=b;for(c=0,b=0;256>b;++b)c=c+this.S[b]+a[b%a.length]&255,d=this.S[b],this.S[b]=this.S[c],this.S[c]=d;this.i=0,this.j=0}function ARC4next(){var a;return this.i=this.i+1&255,this.j=this.j+this.S[this.i]&255,a=this.S[this.i],this.S[this.i]=this.S[this.j],this.S[this.j]=a,this.S[a+this.S[this.i]&255]}function prng_newstate(){return new Arcfour}var dbits,canary=0xdeadbeefcafe,j_lm=15715070==(16777215&canary);j_lm&&"Microsoft Internet Explorer"==navigator.appName?(BigInteger.prototype.am=am2,dbits=30):j_lm&&"Netscape"!=navigator.appName?(BigInteger.prototype.am=am1,dbits=26):(BigInteger.prototype.am=am3,dbits=28),BigInteger.prototype.DB=dbits,BigInteger.prototype.DM=(1<<dbits)-1,BigInteger.prototype.DV=1<<dbits;var BI_FP=52;BigInteger.prototype.FV=Math.pow(2,BI_FP),BigInteger.prototype.F1=BI_FP-dbits,BigInteger.prototype.F2=2*dbits-BI_FP;var BI_RM="0123456789abcdefghijklmnopqrstuvwxyz",BI_RC=new Array,rr,vv;for(rr="0".charCodeAt(0),vv=0;9>=vv;++vv)BI_RC[rr++]=vv;for(rr="a".charCodeAt(0),vv=10;36>vv;++vv)BI_RC[rr++]=vv;for(rr="A".charCodeAt(0),vv=10;36>vv;++vv)BI_RC[rr++]=vv;Classic.prototype.convert=cConvert,Classic.prototype.revert=cRevert,Classic.prototype.reduce=cReduce,Classic.prototype.mulTo=cMulTo,Classic.prototype.sqrTo=cSqrTo,Montgomery.prototype.convert=montConvert,Montgomery.prototype.revert=montRevert,Montgomery.prototype.reduce=montReduce,Montgomery.prototype.mulTo=montMulTo,Montgomery.prototype.sqrTo=montSqrTo,BigInteger.prototype.copyTo=bnpCopyTo,BigInteger.prototype.fromInt=bnpFromInt,BigInteger.prototype.fromString=bnpFromString,BigInteger.prototype.clamp=bnpClamp,BigInteger.prototype.dlShiftTo=bnpDLShiftTo,BigInteger.prototype.drShiftTo=bnpDRShiftTo,BigInteger.prototype.lShiftTo=bnpLShiftTo,BigInteger.prototype.rShiftTo=bnpRShiftTo,BigInteger.prototype.subTo=bnpSubTo,BigInteger.prototype.multiplyTo=bnpMultiplyTo,BigInteger.prototype.squareTo=bnpSquareTo,BigInteger.prototype.divRemTo=bnpDivRemTo,BigInteger.prototype.invDigit=bnpInvDigit,BigInteger.prototype.isEven=bnpIsEven,BigInteger.prototype.exp=bnpExp,BigInteger.prototype.toString=bnToString,BigInteger.prototype.negate=bnNegate,BigInteger.prototype.abs=bnAbs,BigInteger.prototype.compareTo=bnCompareTo,BigInteger.prototype.bitLength=bnBitLength,BigInteger.prototype.mod=bnMod,BigInteger.prototype.modPowInt=bnModPowInt,BigInteger.ZERO=nbv(0),BigInteger.ONE=nbv(1),NullExp.prototype.convert=nNop,NullExp.prototype.revert=nNop,NullExp.prototype.mulTo=nMulTo,NullExp.prototype.sqrTo=nSqrTo,Barrett.prototype.convert=barrettConvert,Barrett.prototype.revert=barrettRevert,Barrett.prototype.reduce=barrettReduce,Barrett.prototype.mulTo=barrettMulTo,Barrett.prototype.sqrTo=barrettSqrTo;var lowprimes=[2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257,263,269,271,277,281,283,293,307,311,313,317,331,337,347,349,353,359,367,373,379,383,389,397,401,409,419,421,431,433,439,443,449,457,461,463,467,479,487,491,499,503,509,521,523,541,547,557,563,569,571,577,587,593,599,601,607,613,617,619,631,641,643,647,653,659,661,673,677,683,691,701,709,719,727,733,739,743,751,757,761,769,773,787,797,809,811,821,823,827,829,839,853,857,859,863,877,881,883,887,907,911,919,929,937,941,947,953,967,971,977,983,991,997],lplim=(1<<26)/lowprimes[lowprimes.length-1];BigInteger.prototype.chunkSize=bnpChunkSize,BigInteger.prototype.toRadix=bnpToRadix,BigInteger.prototype.fromRadix=bnpFromRadix,BigInteger.prototype.fromNumber=bnpFromNumber,BigInteger.prototype.bitwiseTo=bnpBitwiseTo,BigInteger.prototype.changeBit=bnpChangeBit,BigInteger.prototype.addTo=bnpAddTo,BigInteger.prototype.dMultiply=bnpDMultiply,BigInteger.prototype.dAddOffset=bnpDAddOffset,BigInteger.prototype.multiplyLowerTo=bnpMultiplyLowerTo,BigInteger.prototype.multiplyUpperTo=bnpMultiplyUpperTo,BigInteger.prototype.modInt=bnpModInt,BigInteger.prototype.millerRabin=bnpMillerRabin,BigInteger.prototype.clone=bnClone,BigInteger.prototype.intValue=bnIntValue,BigInteger.prototype.byteValue=bnByteValue,BigInteger.prototype.shortValue=bnShortValue,BigInteger.prototype.signum=bnSigNum,BigInteger.prototype.toByteArray=bnToByteArray,BigInteger.prototype.equals=bnEquals,BigInteger.prototype.min=bnMin,BigInteger.prototype.max=bnMax,BigInteger.prototype.and=bnAnd,BigInteger.prototype.or=bnOr,BigInteger.prototype.xor=bnXor,BigInteger.prototype.andNot=bnAndNot,BigInteger.prototype.not=bnNot,BigInteger.prototype.shiftLeft=bnShiftLeft,BigInteger.prototype.shiftRight=bnShiftRight,BigInteger.prototype.getLowestSetBit=bnGetLowestSetBit,BigInteger.prototype.bitCount=bnBitCount,BigInteger.prototype.testBit=bnTestBit,BigInteger.prototype.setBit=bnSetBit,BigInteger.prototype.clearBit=bnClearBit,BigInteger.prototype.flipBit=bnFlipBit,BigInteger.prototype.add=bnAdd,BigInteger.prototype.subtract=bnSubtract,BigInteger.prototype.multiply=bnMultiply,BigInteger.prototype.divide=bnDivide,BigInteger.prototype.remainder=bnRemainder,BigInteger.prototype.divideAndRemainder=bnDivideAndRemainder,BigInteger.prototype.modPow=bnModPow,BigInteger.prototype.modInverse=bnModInverse,BigInteger.prototype.pow=bnPow,BigInteger.prototype.gcd=bnGCD,BigInteger.prototype.isProbablePrime=bnIsProbablePrime,BigInteger.prototype.square=bnSquare;var rng_state,rng_pool,rng_pptr;if(null==rng_pool){rng_pool=new Array,rng_pptr=0;var global="undefined"!=typeof window?window:this,t;if(global&&global.crypto&&global.crypto.getRandomValues){var ua=new Uint8Array(32);for(global.crypto.getRandomValues(ua),t=0;32>t;++t)rng_pool[rng_pptr++]=ua[t]}if("Netscape"==navigator.appName&&navigator.appVersion<"5"&&global&&global.crypto){var z=global.crypto.random(32);for(t=0;t<z.length;++t)rng_pool[rng_pptr++]=255&z.charCodeAt(t)}for(;rng_psize>rng_pptr;)t=Math.floor(65536*Math.random()),rng_pool[rng_pptr++]=t>>>8,rng_pool[rng_pptr++]=255&t;rng_pptr=0,rng_seed_time()}SecureRandom.prototype.nextBytes=rng_get_bytes,Arcfour.prototype.init=ARC4init,Arcfour.prototype.next=ARC4next;var rng_psize=256;
+////////////////////////////////////////////////////////////////////////////////////////
+// Big Integer Library v. 5.5
+// Created 2000, last modified 2013
+// Leemon Baird
+// www.leemon.com
+//
+// Version history:
+// v 5.5  17 Mar 2013
+//   - two lines of a form like "if (x<0) x+=n" had the "if" changed to "while" to 
+//     handle the case when x<-n. (Thanks to James Ansell for finding that bug)
+// v 5.4  3 Oct 2009
+//   - added "var i" to greaterShift() so i is not global. (Thanks to PŽter Szab— for finding that bug)
+//
+// v 5.3  21 Sep 2009
+//   - added randProbPrime(k) for probable primes
+//   - unrolled loop in mont_ (slightly faster)
+//   - millerRabin now takes a bigInt parameter rather than an int
+//
+// v 5.2  15 Sep 2009
+//   - fixed capitalization in call to int2bigInt in randBigInt
+//     (thanks to Emili Evripidou, Reinhold Behringer, and Samuel Macaleese for finding that bug)
+//
+// v 5.1  8 Oct 2007 
+//   - renamed inverseModInt_ to inverseModInt since it doesn't change its parameters
+//   - added functions GCD and randBigInt, which call GCD_ and randBigInt_
+//   - fixed a bug found by Rob Visser (see comment with his name below)
+//   - improved comments
+//
+// This file is public domain.   You can use it for any purpose without restriction.
+// I do not guarantee that it is correct, so use it at your own risk.  If you use 
+// it for something interesting, I'd appreciate hearing about it.  If you find 
+// any bugs or make any improvements, I'd appreciate hearing about those too.
+// It would also be nice if my name and URL were left in the comments.  But none 
+// of that is required.
+//
+// This code defines a bigInt library for arbitrary-precision integers.
+// A bigInt is an array of integers storing the value in chunks of bpe bits, 
+// little endian (buff[0] is the least significant word).
+// Negative bigInts are stored two's complement.  Almost all the functions treat
+// bigInts as nonnegative.  The few that view them as two's complement say so
+// in their comments.  Some functions assume their parameters have at least one 
+// leading zero element. Functions with an underscore at the end of the name put
+// their answer into one of the arrays passed in, and have unpredictable behavior 
+// in case of overflow, so the caller must make sure the arrays are big enough to 
+// hold the answer.  But the average user should never have to call any of the 
+// underscored functions.  Each important underscored function has a wrapper function 
+// of the same name without the underscore that takes care of the details for you.  
+// For each underscored function where a parameter is modified, that same variable 
+// must not be used as another argument too.  So, you cannot square x by doing 
+// multMod_(x,x,n).  You must use squareMod_(x,n) instead, or do y=dup(x); multMod_(x,y,n).
+// Or simply use the multMod(x,x,n) function without the underscore, where
+// such issues never arise, because non-underscored functions never change
+// their parameters; they always allocate new memory for the answer that is returned.
+//
+// These functions are designed to avoid frequent dynamic memory allocation in the inner loop.
+// For most functions, if it needs a BigInt as a local variable it will actually use
+// a global, and will only allocate to it only when it's not the right size.  This ensures
+// that when a function is called repeatedly with same-sized parameters, it only allocates
+// memory on the first call.
+//
+// Note that for cryptographic purposes, the calls to Math.random() must 
+// be replaced with calls to a better pseudorandom number generator.
+//
+// In the following, "bigInt" means a bigInt with at least one leading zero element,
+// and "integer" means a nonnegative integer less than radix.  In some cases, integer 
+// can be negative.  Negative bigInts are 2s complement.
+// 
+// The following functions do not modify their inputs.
+// Those returning a bigInt, string, or Array will dynamically allocate memory for that value.
+// Those returning a boolean will return the integer 0 (false) or 1 (true).
+// Those returning boolean or int will not allocate memory except possibly on the first 
+// time they're called with a given parameter size.
+// 
+// bigInt  add(x,y)               //return (x+y) for bigInts x and y.  
+// bigInt  addInt(x,n)            //return (x+n) where x is a bigInt and n is an integer.
+// string  bigInt2str(x,base)     //return a string form of bigInt x in a given base, with 2 <= base <= 95
+// int     bitSize(x)             //return how many bits long the bigInt x is, not counting leading zeros
+// bigInt  dup(x)                 //return a copy of bigInt x
+// boolean equals(x,y)            //is the bigInt x equal to the bigint y?
+// boolean equalsInt(x,y)         //is bigint x equal to integer y?
+// bigInt  expand(x,n)            //return a copy of x with at least n elements, adding leading zeros if needed
+// Array   findPrimes(n)          //return array of all primes less than integer n
+// bigInt  GCD(x,y)               //return greatest common divisor of bigInts x and y (each with same number of elements).
+// boolean greater(x,y)           //is x>y?  (x and y are nonnegative bigInts)
+// boolean greaterShift(x,y,shift)//is (x <<(shift*bpe)) > y?
+// bigInt  int2bigInt(t,n,m)      //return a bigInt equal to integer t, with at least n bits and m array elements
+// bigInt  inverseMod(x,n)        //return (x**(-1) mod n) for bigInts x and n.  If no inverse exists, it returns null
+// int     inverseModInt(x,n)     //return x**(-1) mod n, for integers x and n.  Return 0 if there is no inverse
+// boolean isZero(x)              //is the bigInt x equal to zero?
+// boolean millerRabin(x,b)       //does one round of Miller-Rabin base integer b say that bigInt x is possibly prime? (b is bigInt, 1<b<x)
+// boolean millerRabinInt(x,b)    //does one round of Miller-Rabin base integer b say that bigInt x is possibly prime? (b is int,    1<b<x)
+// bigInt  mod(x,n)               //return a new bigInt equal to (x mod n) for bigInts x and n.
+// int     modInt(x,n)            //return x mod n for bigInt x and integer n.
+// bigInt  mult(x,y)              //return x*y for bigInts x and y. This is faster when y<x.
+// bigInt  multMod(x,y,n)         //return (x*y mod n) for bigInts x,y,n.  For greater speed, let y<x.
+// boolean negative(x)            //is bigInt x negative?
+// bigInt  powMod(x,y,n)          //return (x**y mod n) where x,y,n are bigInts and ** is exponentiation.  0**0=1. Faster for odd n.
+// bigInt  randBigInt(n,s)        //return an n-bit random BigInt (n>=1).  If s=1, then the most significant of those n bits is set to 1.
+// bigInt  randTruePrime(k)       //return a new, random, k-bit, true prime bigInt using Maurer's algorithm.
+// bigInt  randProbPrime(k)       //return a new, random, k-bit, probable prime bigInt (probability it's composite less than 2^-80).
+// bigInt  str2bigInt(s,b,n,m)    //return a bigInt for number represented in string s in base b with at least n bits and m array elements
+// bigInt  sub(x,y)               //return (x-y) for bigInts x and y.  Negative answers will be 2s complement
+// bigInt  trim(x,k)              //return a copy of x with exactly k leading zero elements
+//
+//
+// The following functions each have a non-underscored version, which most users should call instead.
+// These functions each write to a single parameter, and the caller is responsible for ensuring the array 
+// passed in is large enough to hold the result. 
+//
+// void    addInt_(x,n)          //do x=x+n where x is a bigInt and n is an integer
+// void    add_(x,y)             //do x=x+y for bigInts x and y
+// void    copy_(x,y)            //do x=y on bigInts x and y
+// void    copyInt_(x,n)         //do x=n on bigInt x and integer n
+// void    GCD_(x,y)             //set x to the greatest common divisor of bigInts x and y, (y is destroyed).  (This never overflows its array).
+// boolean inverseMod_(x,n)      //do x=x**(-1) mod n, for bigInts x and n. Returns 1 (0) if inverse does (doesn't) exist
+// void    mod_(x,n)             //do x=x mod n for bigInts x and n. (This never overflows its array).
+// void    mult_(x,y)            //do x=x*y for bigInts x and y.
+// void    multMod_(x,y,n)       //do x=x*y  mod n for bigInts x,y,n.
+// void    powMod_(x,y,n)        //do x=x**y mod n, where x,y,n are bigInts (n is odd) and ** is exponentiation.  0**0=1.
+// void    randBigInt_(b,n,s)    //do b = an n-bit random BigInt. if s=1, then nth bit (most significant bit) is set to 1. n>=1.
+// void    randTruePrime_(ans,k) //do ans = a random k-bit true random prime (not just probable prime) with 1 in the msb.
+// void    sub_(x,y)             //do x=x-y for bigInts x and y. Negative answers will be 2s complement.
+//
+// The following functions do NOT have a non-underscored version. 
+// They each write a bigInt result to one or more parameters.  The caller is responsible for
+// ensuring the arrays passed in are large enough to hold the results. 
+//
+// void addShift_(x,y,ys)       //do x=x+(y<<(ys*bpe))
+// void carry_(x)               //do carries and borrows so each element of the bigInt x fits in bpe bits.
+// void divide_(x,y,q,r)        //divide x by y giving quotient q and remainder r
+// int  divInt_(x,n)            //do x=floor(x/n) for bigInt x and integer n, and return the remainder. (This never overflows its array).
+// int  eGCD_(x,y,d,a,b)        //sets a,b,d to positive bigInts such that d = GCD_(x,y) = a*x-b*y
+// void halve_(x)               //do x=floor(|x|/2)*sgn(x) for bigInt x in 2's complement.  (This never overflows its array).
+// void leftShift_(x,n)         //left shift bigInt x by n bits.  n<bpe.
+// void linComb_(x,y,a,b)       //do x=a*x+b*y for bigInts x and y and integers a and b
+// void linCombShift_(x,y,b,ys) //do x=x+b*(y<<(ys*bpe)) for bigInts x and y, and integers b and ys
+// void mont_(x,y,n,np)         //Montgomery multiplication (see comments where the function is defined)
+// void multInt_(x,n)           //do x=x*n where x is a bigInt and n is an integer.
+// void rightShift_(x,n)        //right shift bigInt x by n bits.  0 <= n < bpe. (This never overflows its array).
+// void squareMod_(x,n)         //do x=x*x  mod n for bigInts x,n
+// void subShift_(x,y,ys)       //do x=x-(y<<(ys*bpe)). Negative answers will be 2s complement.
+//
+// The following functions are based on algorithms from the _Handbook of Applied Cryptography_
+//    powMod_()           = algorithm 14.94, Montgomery exponentiation
+//    eGCD_,inverseMod_() = algorithm 14.61, Binary extended GCD_
+//    GCD_()              = algorothm 14.57, Lehmer's algorithm
+//    mont_()             = algorithm 14.36, Montgomery multiplication
+//    divide_()           = algorithm 14.20  Multiple-precision division
+//    squareMod_()        = algorithm 14.16  Multiple-precision squaring
+//    randTruePrime_()    = algorithm  4.62, Maurer's algorithm
+//    millerRabin()       = algorithm  4.24, Miller-Rabin algorithm
+//
+// Profiling shows:
+//     randTruePrime_() spends:
+//         10% of its time in calls to powMod_()
+//         85% of its time in calls to millerRabin()
+//     millerRabin() spends:
+//         99% of its time in calls to powMod_()   (always with a base of 2)
+//     powMod_() spends:
+//         94% of its time in calls to mont_()  (almost always with x==y)
+//
+// This suggests there are several ways to speed up this library slightly:
+//     - convert powMod_ to use a Montgomery form of k-ary window (or maybe a Montgomery form of sliding window)
+//         -- this should especially focus on being fast when raising 2 to a power mod n
+//     - convert randTruePrime_() to use a minimum r of 1/3 instead of 1/2 with the appropriate change to the test
+//     - tune the parameters in randTruePrime_(), including c, m, and recLimit
+//     - speed up the single loop in mont_() that takes 95% of the runtime, perhaps by reducing checking
+//       within the loop when all the parameters are the same length.
+//
+// There are several ideas that look like they wouldn't help much at all:
+//     - replacing trial division in randTruePrime_() with a sieve (that speeds up something taking almost no time anyway)
+//     - increase bpe from 15 to 30 (that would help if we had a 32*32->64 multiplier, but not with JavaScript's 32*32->32)
+//     - speeding up mont_(x,y,n,np) when x==y by doing a non-modular, non-Montgomery square
+//       followed by a Montgomery reduction.  The intermediate answer will be twice as long as x, so that
+//       method would be slower.  This is unfortunate because the code currently spends almost all of its time
+//       doing mont_(x,x,...), both for randTruePrime_() and powMod_().  A faster method for Montgomery squaring
+//       would have a large impact on the speed of randTruePrime_() and powMod_().  HAC has a couple of poorly-worded
+//       sentences that seem to imply it's faster to do a non-modular square followed by a single
+//       Montgomery reduction, but that's obviously wrong.
+////////////////////////////////////////////////////////////////////////////////////////
+
+//globals
+bpe = 0;         //bits stored per array element
+mask = 0;        //AND this with an array element to chop it down to bpe bits
+radix = mask + 1;  //equals 2^bpe.  A single 1 bit to the left of the last bit of mask.
+
+//the digits for converting to different bases
+digitsStr = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_=!@#$%^&*()[]{}|;:,.<>/?`~ \\\'\"+-';
+
+//initialize the global variables
+for (bpe = 0; (1 << (bpe + 1)) > (1 << bpe); bpe++);  //bpe=number of bits in the mantissa on this platform
+bpe >>= 1;                   //bpe=number of bits in one element of the array representing the bigInt
+mask = (1 << bpe) - 1;           //AND the mask with an integer to get its bpe least significant bits
+radix = mask + 1;              //2^bpe.  a single 1 bit to the left of the first bit of mask
+one = int2bigInt(1, 1, 1);     //constant used in powMod_()
+
+//the following global variables are scratchpad memory to 
+//reduce dynamic memory allocation in the inner loop
+t = new Array(0);
+ss = t;       //used in mult_()
+s0 = t;       //used in multMod_(), squareMod_() 
+s1 = t;       //used in powMod_(), multMod_(), squareMod_() 
+s2 = t;       //used in powMod_(), multMod_()
+s3 = t;       //used in powMod_()
+s4 = t; s5 = t; //used in mod_()
+s6 = t;       //used in bigInt2str()
+s7 = t;       //used in powMod_()
+T = t;        //used in GCD_()
+sa = t;       //used in mont_()
+mr_x1 = t; mr_r = t; mr_a = t;                                      //used in millerRabin()
+eg_v = t; eg_u = t; eg_A = t; eg_B = t; eg_C = t; eg_D = t;               //used in eGCD_(), inverseMod_()
+md_q1 = t; md_q2 = t; md_q3 = t; md_r = t; md_r1 = t; md_r2 = t; md_tt = t; //used in mod_()
+
+primes = t; pows = t; s_i = t; s_i2 = t; s_R = t; s_rm = t; s_q = t; s_n1 = t;
+s_a = t; s_r2 = t; s_n = t; s_b = t; s_d = t; s_x1 = t; s_x2 = t, s_aa = t; //used in randTruePrime_()
+
+rpprb = t; //used in randProbPrimeRounds() (which also uses "primes")
+
+////////////////////////////////////////////////////////////////////////////////////////
+
+
+//return array of all primes less than integer n
+function findPrimes(n) {
+    var i, s, p, ans;
+    s = new Array(n);
+    for (i = 0; i < n; i++)
+        s[i] = 0;
+    s[0] = 2;
+    p = 0;    //first p elements of s are primes, the rest are a sieve
+    for (; s[p] < n;) {                  //s[p] is the pth prime
+        for (i = s[p] * s[p]; i < n; i += s[p]) //mark multiples of s[p]
+            s[i] = 1;
+        p++;
+        s[p] = s[p - 1] + 1;
+        for (; s[p] < n && s[s[p]]; s[p]++); //find next prime (where s[p]==0)
+    }
+    ans = new Array(p);
+    for (i = 0; i < p; i++)
+        ans[i] = s[i];
+    return ans;
+}
+
+
+//does a single round of Miller-Rabin base b consider x to be a possible prime?
+//x is a bigInt, and b is an integer, with b<x
+function millerRabinInt(x, b) {
+    if (mr_x1.length != x.length) {
+        mr_x1 = dup(x);
+        mr_r = dup(x);
+        mr_a = dup(x);
+    }
+
+    copyInt_(mr_a, b);
+    return millerRabin(x, mr_a);
+}
+
+//does a single round of Miller-Rabin base b consider x to be a possible prime?
+//x and b are bigInts with b<x
+function millerRabin(x, b) {
+    var i, j, k, s;
+
+    if (mr_x1.length != x.length) {
+        mr_x1 = dup(x);
+        mr_r = dup(x);
+        mr_a = dup(x);
+    }
+
+    copy_(mr_a, b);
+    copy_(mr_r, x);
+    copy_(mr_x1, x);
+
+    addInt_(mr_r, -1);
+    addInt_(mr_x1, -1);
+
+    //s=the highest power of two that divides mr_r
+    k = 0;
+    for (i = 0; i < mr_r.length; i++)
+        for (j = 1; j < mask; j <<= 1)
+            if (x[i] & j) {
+                s = (k < mr_r.length + bpe ? k : 0);
+                i = mr_r.length;
+                j = mask;
+            } else
+                k++;
+
+    if (s)
+        rightShift_(mr_r, s);
+
+    powMod_(mr_a, mr_r, x);
+
+    if (!equalsInt(mr_a, 1) && !equals(mr_a, mr_x1)) {
+        j = 1;
+        while (j <= s - 1 && !equals(mr_a, mr_x1)) {
+            squareMod_(mr_a, x);
+            if (equalsInt(mr_a, 1)) {
+                return 0;
+            }
+            j++;
+        }
+        if (!equals(mr_a, mr_x1)) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+//returns how many bits long the bigInt is, not counting leading zeros.
+function bitSize(x) {
+    var j, z, w;
+    for (j = x.length - 1; (x[j] == 0) && (j > 0); j--);
+    for (z = 0, w = x[j]; w; (w >>= 1), z++);
+    z += bpe * j;
+    return z;
+}
+
+//return a copy of x with at least n elements, adding leading zeros if needed
+function expand(x, n) {
+    var ans = int2bigInt(0, (x.length > n ? x.length : n) * bpe, 0);
+    copy_(ans, x);
+    return ans;
+}
+
+//return a k-bit true random prime using Maurer's algorithm.
+function randTruePrime(k) {
+    var ans = int2bigInt(0, k, 0);
+    randTruePrime_(ans, k);
+    return trim(ans, 1);
+}
+
+//return a k-bit random probable prime with probability of error < 2^-80
+function randProbPrime(k) {
+    if (k >= 600) return randProbPrimeRounds(k, 2); //numbers from HAC table 4.3
+    if (k >= 550) return randProbPrimeRounds(k, 4);
+    if (k >= 500) return randProbPrimeRounds(k, 5);
+    if (k >= 400) return randProbPrimeRounds(k, 6);
+    if (k >= 350) return randProbPrimeRounds(k, 7);
+    if (k >= 300) return randProbPrimeRounds(k, 9);
+    if (k >= 250) return randProbPrimeRounds(k, 12); //numbers from HAC table 4.4
+    if (k >= 200) return randProbPrimeRounds(k, 15);
+    if (k >= 150) return randProbPrimeRounds(k, 18);
+    if (k >= 100) return randProbPrimeRounds(k, 27);
+    return randProbPrimeRounds(k, 40); //number from HAC remark 4.26 (only an estimate)
+}
+
+//return a k-bit probable random prime using n rounds of Miller Rabin (after trial division with small primes)	
+function randProbPrimeRounds(k, n) {
+    var ans, i, divisible, B;
+    B = 30000;  //B is largest prime to use in trial division
+    ans = int2bigInt(0, k, 0);
+
+    //optimization: try larger and smaller B to find the best limit.
+
+    if (primes.length == 0)
+        primes = findPrimes(30000);  //check for divisibility by primes <=30000
+
+    if (rpprb.length != ans.length)
+        rpprb = dup(ans);
+
+    for (; ;) { //keep trying random values for ans until one appears to be prime
+        //optimization: pick a random number times L=2*3*5*...*p, plus a 
+        //   random element of the list of all numbers in [0,L) not divisible by any prime up to p.
+        //   This can reduce the amount of random number generation.
+
+        randBigInt_(ans, k, 0); //ans = a random odd number to check
+        ans[0] |= 1;
+        divisible = 0;
+
+        //check ans for divisibility by small primes up to B
+        for (i = 0; (i < primes.length) && (primes[i] <= B); i++)
+            if (modInt(ans, primes[i]) == 0 && !equalsInt(ans, primes[i])) {
+                divisible = 1;
+                break;
+            }
+
+        //optimization: change millerRabin so the base can be bigger than the number being checked, then eliminate the while here.
+
+        //do n rounds of Miller Rabin, with random bases less than ans
+        for (i = 0; i < n && !divisible; i++) {
+            randBigInt_(rpprb, k, 0);
+            while (!greater(ans, rpprb)) //pick a random rpprb that's < ans
+                randBigInt_(rpprb, k, 0);
+            if (!millerRabin(ans, rpprb))
+                divisible = 1;
+        }
+
+        if (!divisible)
+            return ans;
+    }
+}
+
+//return a new bigInt equal to (x mod n) for bigInts x and n.
+function mod(x, n) {
+    var ans = dup(x);
+    mod_(ans, n);
+    return trim(ans, 1);
+}
+
+//return (x+n) where x is a bigInt and n is an integer.
+function addInt(x, n) {
+    var ans = expand(x, x.length + 1);
+    addInt_(ans, n);
+    return trim(ans, 1);
+}
+
+//return x*y for bigInts x and y. This is faster when y<x.
+function mult(x, y) {
+    var ans = expand(x, x.length + y.length);
+    mult_(ans, y);
+    return trim(ans, 1);
+}
+
+//return (x**y mod n) where x,y,n are bigInts and ** is exponentiation.  0**0=1. Faster for odd n.
+function powMod(x, y, n) {
+    var ans = expand(x, n.length);
+    powMod_(ans, trim(y, 2), trim(n, 2), 0);  //this should work without the trim, but doesn't
+    return trim(ans, 1);
+}
+
+//return (x-y) for bigInts x and y.  Negative answers will be 2s complement
+function sub(x, y) {
+    var ans = expand(x, (x.length > y.length ? x.length + 1 : y.length + 1));
+    sub_(ans, y);
+    return trim(ans, 1);
+}
+
+//return (x+y) for bigInts x and y.  
+function add(x, y) {
+    var ans = expand(x, (x.length > y.length ? x.length + 1 : y.length + 1));
+    add_(ans, y);
+    return trim(ans, 1);
+}
+
+//return (x**(-1) mod n) for bigInts x and n.  If no inverse exists, it returns null
+function inverseMod(x, n) {
+    var ans = expand(x, n.length);
+    var s;
+    s = inverseMod_(ans, n);
+    return s ? trim(ans, 1) : null;
+}
+
+//return (x*y mod n) for bigInts x,y,n.  For greater speed, let y<x.
+function multMod(x, y, n) {
+    var ans = expand(x, n.length);
+    multMod_(ans, y, n);
+    return trim(ans, 1);
+}
+
+//generate a k-bit true random prime using Maurer's algorithm,
+//and put it into ans.  The bigInt ans must be large enough to hold it.
+function randTruePrime_(ans, k) {
+    var c, m, pm, dd, j, r, B, divisible, z, zz, recSize;
+
+    if (primes.length == 0)
+        primes = findPrimes(30000);  //check for divisibility by primes <=30000
+
+    if (pows.length == 0) {
+        pows = new Array(512);
+        for (j = 0; j < 512; j++) {
+            pows[j] = Math.pow(2, j / 511. - 1.);
+        }
+    }
+
+    //c and m should be tuned for a particular machine and value of k, to maximize speed
+    c = 0.1;  //c=0.1 in HAC
+    m = 20;   //generate this k-bit number by first recursively generating a number that has between k/2 and k-m bits
+    recLimit = 20; //stop recursion when k <=recLimit.  Must have recLimit >= 2
+
+    if (s_i2.length != ans.length) {
+        s_i2 = dup(ans);
+        s_R = dup(ans);
+        s_n1 = dup(ans);
+        s_r2 = dup(ans);
+        s_d = dup(ans);
+        s_x1 = dup(ans);
+        s_x2 = dup(ans);
+        s_b = dup(ans);
+        s_n = dup(ans);
+        s_i = dup(ans);
+        s_rm = dup(ans);
+        s_q = dup(ans);
+        s_a = dup(ans);
+        s_aa = dup(ans);
+    }
+
+    if (k <= recLimit) {  //generate small random primes by trial division up to its square root
+        pm = (1 << ((k + 2) >> 1)) - 1; //pm is binary number with all ones, just over sqrt(2^k)
+        copyInt_(ans, 0);
+        for (dd = 1; dd;) {
+            dd = 0;
+            ans[0] = 1 | (1 << (k - 1)) | Math.floor(Math.random() * (1 << k));  //random, k-bit, odd integer, with msb 1
+            for (j = 1; (j < primes.length) && ((primes[j] & pm) == primes[j]); j++) { //trial division by all primes 3...sqrt(2^k)
+                if (0 == (ans[0] % primes[j])) {
+                    dd = 1;
+                    break;
+                }
+            }
+        }
+        carry_(ans);
+        return;
+    }
+
+    B = c * k * k;    //try small primes up to B (or all the primes[] array if the largest is less than B).
+    if (k > 2 * m)  //generate this k-bit number by first recursively generating a number that has between k/2 and k-m bits
+        for (r = 1; k - k * r <= m;)
+            r = pows[Math.floor(Math.random() * 512)];   //r=Math.pow(2,Math.random()-1);
+    else
+        r = .5;
+
+    //simulation suggests the more complex algorithm using r=.333 is only slightly faster.
+
+    recSize = Math.floor(r * k) + 1;
+
+    randTruePrime_(s_q, recSize);
+    copyInt_(s_i2, 0);
+    s_i2[Math.floor((k - 2) / bpe)] |= (1 << ((k - 2) % bpe));   //s_i2=2^(k-2)
+    divide_(s_i2, s_q, s_i, s_rm);                        //s_i=floor((2^(k-1))/(2q))
+
+    z = bitSize(s_i);
+
+    for (; ;) {
+        for (; ;) {  //generate z-bit numbers until one falls in the range [0,s_i-1]
+            randBigInt_(s_R, z, 0);
+            if (greater(s_i, s_R))
+                break;
+        }                //now s_R is in the range [0,s_i-1]
+        addInt_(s_R, 1);  //now s_R is in the range [1,s_i]
+        add_(s_R, s_i);   //now s_R is in the range [s_i+1,2*s_i]
+
+        copy_(s_n, s_q);
+        mult_(s_n, s_R);
+        multInt_(s_n, 2);
+        addInt_(s_n, 1);    //s_n=2*s_R*s_q+1
+
+        copy_(s_r2, s_R);
+        multInt_(s_r2, 2);  //s_r2=2*s_R
+
+        //check s_n for divisibility by small primes up to B
+        for (divisible = 0, j = 0; (j < primes.length) && (primes[j] < B); j++)
+            if (modInt(s_n, primes[j]) == 0 && !equalsInt(s_n, primes[j])) {
+                divisible = 1;
+                break;
+            }
+
+        if (!divisible)    //if it passes small primes check, then try a single Miller-Rabin base 2
+            if (!millerRabinInt(s_n, 2)) //this line represents 75% of the total runtime for randTruePrime_ 
+                divisible = 1;
+
+        if (!divisible) {  //if it passes that test, continue checking s_n
+            addInt_(s_n, -3);
+            for (j = s_n.length - 1; (s_n[j] == 0) && (j > 0); j--);  //strip leading zeros
+            for (zz = 0, w = s_n[j]; w; (w >>= 1), zz++);
+            zz += bpe * j;                             //zz=number of bits in s_n, ignoring leading zeros
+            for (; ;) {  //generate z-bit numbers until one falls in the range [0,s_n-1]
+                randBigInt_(s_a, zz, 0);
+                if (greater(s_n, s_a))
+                    break;
+            }                //now s_a is in the range [0,s_n-1]
+            addInt_(s_n, 3);  //now s_a is in the range [0,s_n-4]
+            addInt_(s_a, 2);  //now s_a is in the range [2,s_n-2]
+            copy_(s_b, s_a);
+            copy_(s_n1, s_n);
+            addInt_(s_n1, -1);
+            powMod_(s_b, s_n1, s_n);   //s_b=s_a^(s_n-1) modulo s_n
+            addInt_(s_b, -1);
+            if (isZero(s_b)) {
+                copy_(s_b, s_a);
+                powMod_(s_b, s_r2, s_n);
+                addInt_(s_b, -1);
+                copy_(s_aa, s_n);
+                copy_(s_d, s_b);
+                GCD_(s_d, s_n);  //if s_b and s_n are relatively prime, then s_n is a prime
+                if (equalsInt(s_d, 1)) {
+                    copy_(ans, s_aa);
+                    return;     //if we've made it this far, then s_n is absolutely guaranteed to be prime
+                }
+            }
+        }
+    }
+}
+
+//Return an n-bit random BigInt (n>=1).  If s=1, then the most significant of those n bits is set to 1.
+function randBigInt(n, s) {
+    var a, b;
+    a = Math.floor((n - 1) / bpe) + 2; //# array elements to hold the BigInt with a leading 0 element
+    b = int2bigInt(0, 0, a);
+    randBigInt_(b, n, s);
+    return b;
+}
+
+//Set b to an n-bit random BigInt.  If s=1, then the most significant of those n bits is set to 1.
+//Array b must be big enough to hold the result. Must have n>=1
+function randBigInt_(b, n, s) {
+    var i, a;
+    for (i = 0; i < b.length; i++)
+        b[i] = 0;
+    a = Math.floor((n - 1) / bpe) + 1; //# array elements to hold the BigInt
+    for (i = 0; i < a; i++) {
+        b[i] = Math.floor(Math.random() * (1 << (bpe - 1)));
+    }
+    b[a - 1] &= (2 << ((n - 1) % bpe)) - 1;
+    if (s == 1)
+        b[a - 1] |= (1 << ((n - 1) % bpe));
+}
+
+//Return the greatest common divisor of bigInts x and y (each with same number of elements).
+function GCD(x, y) {
+    var xc, yc;
+    xc = dup(x);
+    yc = dup(y);
+    GCD_(xc, yc);
+    return xc;
+}
+
+//set x to the greatest common divisor of bigInts x and y (each with same number of elements).
+//y is destroyed.
+function GCD_(x, y) {
+    var i, xp, yp, A, B, C, D, q, sing;
+    if (T.length != x.length)
+        T = dup(x);
+
+    sing = 1;
+    while (sing) { //while y has nonzero elements other than y[0]
+        sing = 0;
+        for (i = 1; i < y.length; i++) //check if y has nonzero elements other than 0
+            if (y[i]) {
+                sing = 1;
+                break;
+            }
+        if (!sing) break; //quit when y all zero elements except possibly y[0]
+
+        for (i = x.length; !x[i] && i >= 0; i--);  //find most significant element of x
+        xp = x[i];
+        yp = y[i];
+        A = 1; B = 0; C = 0; D = 1;
+        while ((yp + C) && (yp + D)) {
+            q = Math.floor((xp + A) / (yp + C));
+            qp = Math.floor((xp + B) / (yp + D));
+            if (q != qp)
+                break;
+            t = A - q * C; A = C; C = t;    //  do (A,B,xp, C,D,yp) = (C,D,yp, A,B,xp) - q*(0,0,0, C,D,yp)      
+            t = B - q * D; B = D; D = t;
+            t = xp - q * yp; xp = yp; yp = t;
+        }
+        if (B) {
+            copy_(T, x);
+            linComb_(x, y, A, B); //x=A*x+B*y
+            linComb_(y, T, D, C); //y=D*y+C*T
+        } else {
+            mod_(x, y);
+            copy_(T, x);
+            copy_(x, y);
+            copy_(y, T);
+        }
+    }
+    if (y[0] == 0)
+        return;
+    t = modInt(x, y[0]);
+    copyInt_(x, y[0]);
+    y[0] = t;
+    while (y[0]) {
+        x[0] %= y[0];
+        t = x[0]; x[0] = y[0]; y[0] = t;
+    }
+}
+
+//do x=x**(-1) mod n, for bigInts x and n.
+//If no inverse exists, it sets x to zero and returns 0, else it returns 1.
+//The x array must be at least as large as the n array.
+function inverseMod_(x, n) {
+    var k = 1 + 2 * Math.max(x.length, n.length);
+
+    if (!(x[0] & 1) && !(n[0] & 1)) {  //if both inputs are even, then inverse doesn't exist
+        copyInt_(x, 0);
+        return 0;
+    }
+
+    if (eg_u.length != k) {
+        eg_u = new Array(k);
+        eg_v = new Array(k);
+        eg_A = new Array(k);
+        eg_B = new Array(k);
+        eg_C = new Array(k);
+        eg_D = new Array(k);
+    }
+
+    copy_(eg_u, x);
+    copy_(eg_v, n);
+    copyInt_(eg_A, 1);
+    copyInt_(eg_B, 0);
+    copyInt_(eg_C, 0);
+    copyInt_(eg_D, 1);
+    for (; ;) {
+        while (!(eg_u[0] & 1)) {  //while eg_u is even
+            halve_(eg_u);
+            if (!(eg_A[0] & 1) && !(eg_B[0] & 1)) { //if eg_A==eg_B==0 mod 2
+                halve_(eg_A);
+                halve_(eg_B);
+            } else {
+                add_(eg_A, n); halve_(eg_A);
+                sub_(eg_B, x); halve_(eg_B);
+            }
+        }
+
+        while (!(eg_v[0] & 1)) {  //while eg_v is even
+            halve_(eg_v);
+            if (!(eg_C[0] & 1) && !(eg_D[0] & 1)) { //if eg_C==eg_D==0 mod 2
+                halve_(eg_C);
+                halve_(eg_D);
+            } else {
+                add_(eg_C, n); halve_(eg_C);
+                sub_(eg_D, x); halve_(eg_D);
+            }
+        }
+
+        if (!greater(eg_v, eg_u)) { //eg_v <= eg_u
+            sub_(eg_u, eg_v);
+            sub_(eg_A, eg_C);
+            sub_(eg_B, eg_D);
+        } else {                   //eg_v > eg_u
+            sub_(eg_v, eg_u);
+            sub_(eg_C, eg_A);
+            sub_(eg_D, eg_B);
+        }
+
+        if (equalsInt(eg_u, 0)) {
+            while (negative(eg_C)) //make sure answer is nonnegative
+                add_(eg_C, n);
+            copy_(x, eg_C);
+
+            if (!equalsInt(eg_v, 1)) { //if GCD_(x,n)!=1, then there is no inverse
+                copyInt_(x, 0);
+                return 0;
+            }
+            return 1;
+        }
+    }
+}
+
+//return x**(-1) mod n, for integers x and n.  Return 0 if there is no inverse
+function inverseModInt(x, n) {
+    var a = 1, b = 0, t;
+    for (; ;) {
+        if (x == 1) return a;
+        if (x == 0) return 0;
+        b -= a * Math.floor(n / x);
+        n %= x;
+
+        if (n == 1) return b; //to avoid negatives, change this b to n-b, and each -= to +=
+        if (n == 0) return 0;
+        a -= b * Math.floor(x / n);
+        x %= n;
+    }
+}
+
+//this deprecated function is for backward compatibility only. 
+function inverseModInt_(x, n) {
+    return inverseModInt(x, n);
+}
+
+
+//Given positive bigInts x and y, change the bigints v, a, and b to positive bigInts such that:
+//     v = GCD_(x,y) = a*x-b*y
+//The bigInts v, a, b, must have exactly as many elements as the larger of x and y.
+function eGCD_(x, y, v, a, b) {
+    var g = 0;
+    var k = Math.max(x.length, y.length);
+    if (eg_u.length != k) {
+        eg_u = new Array(k);
+        eg_A = new Array(k);
+        eg_B = new Array(k);
+        eg_C = new Array(k);
+        eg_D = new Array(k);
+    }
+    while (!(x[0] & 1) && !(y[0] & 1)) {  //while x and y both even
+        halve_(x);
+        halve_(y);
+        g++;
+    }
+    copy_(eg_u, x);
+    copy_(v, y);
+    copyInt_(eg_A, 1);
+    copyInt_(eg_B, 0);
+    copyInt_(eg_C, 0);
+    copyInt_(eg_D, 1);
+    for (; ;) {
+        while (!(eg_u[0] & 1)) {  //while u is even
+            halve_(eg_u);
+            if (!(eg_A[0] & 1) && !(eg_B[0] & 1)) { //if A==B==0 mod 2
+                halve_(eg_A);
+                halve_(eg_B);
+            } else {
+                add_(eg_A, y); halve_(eg_A);
+                sub_(eg_B, x); halve_(eg_B);
+            }
+        }
+
+        while (!(v[0] & 1)) {  //while v is even
+            halve_(v);
+            if (!(eg_C[0] & 1) && !(eg_D[0] & 1)) { //if C==D==0 mod 2
+                halve_(eg_C);
+                halve_(eg_D);
+            } else {
+                add_(eg_C, y); halve_(eg_C);
+                sub_(eg_D, x); halve_(eg_D);
+            }
+        }
+
+        if (!greater(v, eg_u)) { //v<=u
+            sub_(eg_u, v);
+            sub_(eg_A, eg_C);
+            sub_(eg_B, eg_D);
+        } else {                //v>u
+            sub_(v, eg_u);
+            sub_(eg_C, eg_A);
+            sub_(eg_D, eg_B);
+        }
+        if (equalsInt(eg_u, 0)) {
+            while (negative(eg_C)) {   //make sure a (C) is nonnegative
+                add_(eg_C, y);
+                sub_(eg_D, x);
+            }
+            multInt_(eg_D, -1);  ///make sure b (D) is nonnegative
+            copy_(a, eg_C);
+            copy_(b, eg_D);
+            leftShift_(v, g);
+            return;
+        }
+    }
+}
+
+
+//is bigInt x negative?
+function negative(x) {
+    return ((x[x.length - 1] >> (bpe - 1)) & 1);
+}
+
+
+//is (x << (shift*bpe)) > y?
+//x and y are nonnegative bigInts
+//shift is a nonnegative integer
+function greaterShift(x, y, shift) {
+    var i, kx = x.length, ky = y.length;
+    k = ((kx + shift) < ky) ? (kx + shift) : ky;
+    for (i = ky - 1 - shift; i < kx && i >= 0; i++)
+        if (x[i] > 0)
+            return 1; //if there are nonzeros in x to the left of the first column of y, then x is bigger
+    for (i = kx - 1 + shift; i < ky; i++)
+        if (y[i] > 0)
+            return 0; //if there are nonzeros in y to the left of the first column of x, then x is not bigger
+    for (i = k - 1; i >= shift; i--)
+        if (x[i - shift] > y[i]) return 1;
+        else if (x[i - shift] < y[i]) return 0;
+    return 0;
+}
+
+//is x > y? (x and y both nonnegative)
+function greater(x, y) {
+    var i;
+    var k = (x.length < y.length) ? x.length : y.length;
+
+    for (i = x.length; i < y.length; i++)
+        if (y[i])
+            return 0;  //y has more digits
+
+    for (i = y.length; i < x.length; i++)
+        if (x[i])
+            return 1;  //x has more digits
+
+    for (i = k - 1; i >= 0; i--)
+        if (x[i] > y[i])
+            return 1;
+        else if (x[i] < y[i])
+            return 0;
+    return 0;
+}
+
+//divide x by y giving quotient q and remainder r.  (q=floor(x/y),  r=x mod y).  All 4 are bigints.
+//x must have at least one leading zero element.
+//y must be nonzero.
+//q and r must be arrays that are exactly the same length as x. (Or q can have more).
+//Must have x.length >= y.length >= 2.
+function divide_(x, y, q, r) {
+    var kx, ky;
+    var i, j, y1, y2, c, a, b;
+    copy_(r, x);
+    for (ky = y.length; y[ky - 1] == 0; ky--); //ky is number of elements in y, not including leading zeros
+
+    //normalize: ensure the most significant element of y has its highest bit set  
+    b = y[ky - 1];
+    for (a = 0; b; a++)
+        b >>= 1;
+    a = bpe - a;  //a is how many bits to shift so that the high order bit of y is leftmost in its array element
+    leftShift_(y, a);  //multiply both by 1<<a now, then divide both by that at the end
+    leftShift_(r, a);
+
+    //Rob Visser discovered a bug: the following line was originally just before the normalization.
+    for (kx = r.length; r[kx - 1] == 0 && kx > ky; kx--); //kx is number of elements in normalized x, not including leading zeros
+
+    copyInt_(q, 0);                      // q=0
+    while (!greaterShift(y, r, kx - ky)) {  // while (leftShift_(y,kx-ky) <= r) {
+        subShift_(r, y, kx - ky);             //   r=r-leftShift_(y,kx-ky)
+        q[kx - ky]++;                       //   q[kx-ky]++;
+    }                                   // }
+
+    for (i = kx - 1; i >= ky; i--) {
+        if (r[i] == y[ky - 1])
+            q[i - ky] = mask;
+        else
+            q[i - ky] = Math.floor((r[i] * radix + r[i - 1]) / y[ky - 1]);
+
+        //The following for(;;) loop is equivalent to the commented while loop, 
+        //except that the uncommented version avoids overflow.
+        //The commented loop comes from HAC, which assumes r[-1]==y[-1]==0
+        //  while (q[i-ky]*(y[ky-1]*radix+y[ky-2]) > r[i]*radix*radix+r[i-1]*radix+r[i-2])
+        //    q[i-ky]--;    
+        for (; ;) {
+            y2 = (ky > 1 ? y[ky - 2] : 0) * q[i - ky];
+            c = y2 >> bpe;
+            y2 = y2 & mask;
+            y1 = c + q[i - ky] * y[ky - 1];
+            c = y1 >> bpe;
+            y1 = y1 & mask;
+
+            if (c == r[i] ? y1 == r[i - 1] ? y2 > (i > 1 ? r[i - 2] : 0) : y1 > r[i - 1] : c > r[i])
+                q[i - ky]--;
+            else
+                break;
+        }
+
+        linCombShift_(r, y, -q[i - ky], i - ky);    //r=r-q[i-ky]*leftShift_(y,i-ky)
+        if (negative(r)) {
+            addShift_(r, y, i - ky);         //r=r+leftShift_(y,i-ky)
+            q[i - ky]--;
+        }
+    }
+
+    rightShift_(y, a);  //undo the normalization step
+    rightShift_(r, a);  //undo the normalization step
+}
+
+//do carries and borrows so each element of the bigInt x fits in bpe bits.
+function carry_(x) {
+    var i, k, c, b;
+    k = x.length;
+    c = 0;
+    for (i = 0; i < k; i++) {
+        c += x[i];
+        b = 0;
+        if (c < 0) {
+            b = -(c >> bpe);
+            c += b * radix;
+        }
+        x[i] = c & mask;
+        c = (c >> bpe) - b;
+    }
+}
+
+//return x mod n for bigInt x and integer n.
+function modInt(x, n) {
+    var i, c = 0;
+    for (i = x.length - 1; i >= 0; i--)
+        c = (c * radix + x[i]) % n;
+    return c;
+}
+
+//convert the integer t into a bigInt with at least the given number of bits.
+//the returned array stores the bigInt in bpe-bit chunks, little endian (buff[0] is least significant word)
+//Pad the array with leading zeros so that it has at least minSize elements.
+//There will always be at least one leading 0 element.
+function int2bigInt(t, bits, minSize) {
+    var i, k;
+    k = Math.ceil(bits / bpe) + 1;
+    k = minSize > k ? minSize : k;
+    buff = new Array(k);
+    copyInt_(buff, t);
+    return buff;
+}
+
+//return the bigInt given a string representation in a given base.  
+//Pad the array with leading zeros so that it has at least minSize elements.
+//If base=-1, then it reads in a space-separated list of array elements in decimal.
+//The array will always have at least one leading zero, unless base=-1.
+function str2bigInt(s, base, minSize) {
+    var d, i, j, x, y, kk;
+    var k = s.length;
+    if (base == -1) { //comma-separated list of array elements in decimal
+        x = new Array(0);
+        for (; ;) {
+            y = new Array(x.length + 1);
+            for (i = 0; i < x.length; i++)
+                y[i + 1] = x[i];
+            y[0] = parseInt(s, 10);
+            x = y;
+            d = s.indexOf(',', 0);
+            if (d < 1)
+                break;
+            s = s.substring(d + 1);
+            if (s.length == 0)
+                break;
+        }
+        if (x.length < minSize) {
+            y = new Array(minSize);
+            copy_(y, x);
+            return y;
+        }
+        return x;
+    }
+
+    x = int2bigInt(0, base * k, 0);
+    for (i = 0; i < k; i++) {
+        d = digitsStr.indexOf(s.substring(i, i + 1), 0);
+        if (base <= 36 && d >= 36)  //convert lowercase to uppercase if base<=36
+            d -= 26;
+        if (d >= base || d < 0) {   //stop at first illegal character
+            break;
+        }
+        multInt_(x, base);
+        addInt_(x, d);
+    }
+
+    for (k = x.length; k > 0 && !x[k - 1]; k--); //strip off leading zeros
+    k = minSize > k + 1 ? minSize : k + 1;
+    y = new Array(k);
+    kk = k < x.length ? k : x.length;
+    for (i = 0; i < kk; i++)
+        y[i] = x[i];
+    for (; i < k; i++)
+        y[i] = 0;
+    return y;
+}
+
+//is bigint x equal to integer y?
+//y must have less than bpe bits
+function equalsInt(x, y) {
+    var i;
+    if (x[0] != y)
+        return 0;
+    for (i = 1; i < x.length; i++)
+        if (x[i])
+            return 0;
+    return 1;
+}
+
+//are bigints x and y equal?
+//this works even if x and y are different lengths and have arbitrarily many leading zeros
+function equals(x, y) {
+    var i;
+    var k = x.length < y.length ? x.length : y.length;
+    for (i = 0; i < k; i++)
+        if (x[i] != y[i])
+            return 0;
+    if (x.length > y.length) {
+        for (; i < x.length; i++)
+            if (x[i])
+                return 0;
+    } else {
+        for (; i < y.length; i++)
+            if (y[i])
+                return 0;
+    }
+    return 1;
+}
+
+//is the bigInt x equal to zero?
+function isZero(x) {
+    var i;
+    for (i = 0; i < x.length; i++)
+        if (x[i])
+            return 0;
+    return 1;
+}
+
+//convert a bigInt into a string in a given base, from base 2 up to base 95.
+//Base -1 prints the contents of the array representing the number.
+function bigInt2str(x, base) {
+    var i, t, s = "";
+
+    if (s6.length != x.length)
+        s6 = dup(x);
+    else
+        copy_(s6, x);
+
+    if (base == -1) { //return the list of array contents
+        for (i = x.length - 1; i > 0; i--)
+            s += x[i] + ',';
+        s += x[0];
+    }
+    else { //return it in the given base
+        while (!isZero(s6)) {
+            t = divInt_(s6, base);  //t=s6 % base; s6=floor(s6/base);
+            s = digitsStr.substring(t, t + 1) + s;
+        }
+    }
+    if (s.length == 0)
+        s = "0";
+    return s;
+}
+
+//returns a duplicate of bigInt x
+function dup(x) {
+    var i;
+    buff = new Array(x.length);
+    copy_(buff, x);
+    return buff;
+}
+
+//do x=y on bigInts x and y.  x must be an array at least as big as y (not counting the leading zeros in y).
+function copy_(x, y) {
+    var i;
+    var k = x.length < y.length ? x.length : y.length;
+    for (i = 0; i < k; i++)
+        x[i] = y[i];
+    for (i = k; i < x.length; i++)
+        x[i] = 0;
+}
+
+//do x=y on bigInt x and integer y.  
+function copyInt_(x, n) {
+    var i, c;
+    for (c = n, i = 0; i < x.length; i++) {
+        x[i] = c & mask;
+        c >>= bpe;
+    }
+}
+
+//do x=x+n where x is a bigInt and n is an integer.
+//x must be large enough to hold the result.
+function addInt_(x, n) {
+    var i, k, c, b;
+    x[0] += n;
+    k = x.length;
+    c = 0;
+    for (i = 0; i < k; i++) {
+        c += x[i];
+        b = 0;
+        if (c < 0) {
+            b = -(c >> bpe);
+            c += b * radix;
+        }
+        x[i] = c & mask;
+        c = (c >> bpe) - b;
+        if (!c) return; //stop carrying as soon as the carry is zero
+    }
+}
+
+//right shift bigInt x by n bits.  0 <= n < bpe.
+function rightShift_(x, n) {
+    var i;
+    var k = Math.floor(n / bpe);
+    if (k) {
+        for (i = 0; i < x.length - k; i++) //right shift x by k elements
+            x[i] = x[i + k];
+        for (; i < x.length; i++)
+            x[i] = 0;
+        n %= bpe;
+    }
+    for (i = 0; i < x.length - 1; i++) {
+        x[i] = mask & ((x[i + 1] << (bpe - n)) | (x[i] >> n));
+    }
+    x[i] >>= n;
+}
+
+//do x=floor(|x|/2)*sgn(x) for bigInt x in 2's complement
+function halve_(x) {
+    var i;
+    for (i = 0; i < x.length - 1; i++) {
+        x[i] = mask & ((x[i + 1] << (bpe - 1)) | (x[i] >> 1));
+    }
+    x[i] = (x[i] >> 1) | (x[i] & (radix >> 1));  //most significant bit stays the same
+}
+
+//left shift bigInt x by n bits.
+function leftShift_(x, n) {
+    var i;
+    var k = Math.floor(n / bpe);
+    if (k) {
+        for (i = x.length; i >= k; i--) //left shift x by k elements
+            x[i] = x[i - k];
+        for (; i >= 0; i--)
+            x[i] = 0;
+        n %= bpe;
+    }
+    if (!n)
+        return;
+    for (i = x.length - 1; i > 0; i--) {
+        x[i] = mask & ((x[i] << n) | (x[i - 1] >> (bpe - n)));
+    }
+    x[i] = mask & (x[i] << n);
+}
+
+//do x=x*n where x is a bigInt and n is an integer.
+//x must be large enough to hold the result.
+function multInt_(x, n) {
+    var i, k, c, b;
+    if (!n)
+        return;
+    k = x.length;
+    c = 0;
+    for (i = 0; i < k; i++) {
+        c += x[i] * n;
+        b = 0;
+        if (c < 0) {
+            b = -(c >> bpe);
+            c += b * radix;
+        }
+        x[i] = c & mask;
+        c = (c >> bpe) - b;
+    }
+}
+
+//do x=floor(x/n) for bigInt x and integer n, and return the remainder
+function divInt_(x, n) {
+    var i, r = 0, s;
+    for (i = x.length - 1; i >= 0; i--) {
+        s = r * radix + x[i];
+        x[i] = Math.floor(s / n);
+        r = s % n;
+    }
+    return r;
+}
+
+//do the linear combination x=a*x+b*y for bigInts x and y, and integers a and b.
+//x must be large enough to hold the answer.
+function linComb_(x, y, a, b) {
+    var i, c, k, kk;
+    k = x.length < y.length ? x.length : y.length;
+    kk = x.length;
+    for (c = 0, i = 0; i < k; i++) {
+        c += a * x[i] + b * y[i];
+        x[i] = c & mask;
+        c >>= bpe;
+    }
+    for (i = k; i < kk; i++) {
+        c += a * x[i];
+        x[i] = c & mask;
+        c >>= bpe;
+    }
+}
+
+//do the linear combination x=a*x+b*(y<<(ys*bpe)) for bigInts x and y, and integers a, b and ys.
+//x must be large enough to hold the answer.
+function linCombShift_(x, y, b, ys) {
+    var i, c, k, kk;
+    k = x.length < ys + y.length ? x.length : ys + y.length;
+    kk = x.length;
+    for (c = 0, i = ys; i < k; i++) {
+        c += x[i] + b * y[i - ys];
+        x[i] = c & mask;
+        c >>= bpe;
+    }
+    for (i = k; c && i < kk; i++) {
+        c += x[i];
+        x[i] = c & mask;
+        c >>= bpe;
+    }
+}
+
+//do x=x+(y<<(ys*bpe)) for bigInts x and y, and integers a,b and ys.
+//x must be large enough to hold the answer.
+function addShift_(x, y, ys) {
+    var i, c, k, kk;
+    k = x.length < ys + y.length ? x.length : ys + y.length;
+    kk = x.length;
+    for (c = 0, i = ys; i < k; i++) {
+        c += x[i] + y[i - ys];
+        x[i] = c & mask;
+        c >>= bpe;
+    }
+    for (i = k; c && i < kk; i++) {
+        c += x[i];
+        x[i] = c & mask;
+        c >>= bpe;
+    }
+}
+
+//do x=x-(y<<(ys*bpe)) for bigInts x and y, and integers a,b and ys.
+//x must be large enough to hold the answer.
+function subShift_(x, y, ys) {
+    var i, c, k, kk;
+    k = x.length < ys + y.length ? x.length : ys + y.length;
+    kk = x.length;
+    for (c = 0, i = ys; i < k; i++) {
+        c += x[i] - y[i - ys];
+        x[i] = c & mask;
+        c >>= bpe;
+    }
+    for (i = k; c && i < kk; i++) {
+        c += x[i];
+        x[i] = c & mask;
+        c >>= bpe;
+    }
+}
+
+//do x=x-y for bigInts x and y.
+//x must be large enough to hold the answer.
+//negative answers will be 2s complement
+function sub_(x, y) {
+    var i, c, k, kk;
+    k = x.length < y.length ? x.length : y.length;
+    for (c = 0, i = 0; i < k; i++) {
+        c += x[i] - y[i];
+        x[i] = c & mask;
+        c >>= bpe;
+    }
+    for (i = k; c && i < x.length; i++) {
+        c += x[i];
+        x[i] = c & mask;
+        c >>= bpe;
+    }
+}
+
+//do x=x+y for bigInts x and y.
+//x must be large enough to hold the answer.
+function add_(x, y) {
+    var i, c, k, kk;
+    k = x.length < y.length ? x.length : y.length;
+    for (c = 0, i = 0; i < k; i++) {
+        c += x[i] + y[i];
+        x[i] = c & mask;
+        c >>= bpe;
+    }
+    for (i = k; c && i < x.length; i++) {
+        c += x[i];
+        x[i] = c & mask;
+        c >>= bpe;
+    }
+}
+
+//do x=x*y for bigInts x and y.  This is faster when y<x.
+function mult_(x, y) {
+    var i;
+    if (ss.length != 2 * x.length)
+        ss = new Array(2 * x.length);
+    copyInt_(ss, 0);
+    for (i = 0; i < y.length; i++)
+        if (y[i])
+            linCombShift_(ss, x, y[i], i);   //ss=1*ss+y[i]*(x<<(i*bpe))
+    copy_(x, ss);
+}
+
+//do x=x mod n for bigInts x and n.
+function mod_(x, n) {
+    if (s4.length != x.length)
+        s4 = dup(x);
+    else
+        copy_(s4, x);
+    if (s5.length != x.length)
+        s5 = dup(x);
+    divide_(s4, n, s5, x);  //x = remainder of s4 / n
+}
+
+//do x=x*y mod n for bigInts x,y,n.
+//for greater speed, let y<x.
+function multMod_(x, y, n) {
+    var i;
+    if (s0.length != 2 * x.length)
+        s0 = new Array(2 * x.length);
+    copyInt_(s0, 0);
+    for (i = 0; i < y.length; i++)
+        if (y[i])
+            linCombShift_(s0, x, y[i], i);   //s0=1*s0+y[i]*(x<<(i*bpe))
+    mod_(s0, n);
+    copy_(x, s0);
+}
+
+//do x=x*x mod n for bigInts x,n.
+function squareMod_(x, n) {
+    var i, j, d, c, kx, kn, k;
+    for (kx = x.length; kx > 0 && !x[kx - 1]; kx--);  //ignore leading zeros in x
+    k = kx > n.length ? 2 * kx : 2 * n.length; //k=# elements in the product, which is twice the elements in the larger of x and n
+    if (s0.length != k)
+        s0 = new Array(k);
+    copyInt_(s0, 0);
+    for (i = 0; i < kx; i++) {
+        c = s0[2 * i] + x[i] * x[i];
+        s0[2 * i] = c & mask;
+        c >>= bpe;
+        for (j = i + 1; j < kx; j++) {
+            c = s0[i + j] + 2 * x[i] * x[j] + c;
+            s0[i + j] = (c & mask);
+            c >>= bpe;
+        }
+        s0[i + kx] = c;
+    }
+    mod_(s0, n);
+    copy_(x, s0);
+}
+
+//return x with exactly k leading zero elements
+function trim(x, k) {
+    var i, y;
+    for (i = x.length; i > 0 && !x[i - 1]; i--);
+    y = new Array(i + k);
+    copy_(y, x);
+    return y;
+}
+
+//do x=x**y mod n, where x,y,n are bigInts and ** is exponentiation.  0**0=1.
+//this is faster when n is odd.  x usually needs to have as many elements as n.
+function powMod_(x, y, n) {
+    var k1, k2, kn, np;
+    if (s7.length != n.length)
+        s7 = dup(n);
+
+    //for even modulus, use a simple square-and-multiply algorithm,
+    //rather than using the more complex Montgomery algorithm.
+    if ((n[0] & 1) == 0) {
+        copy_(s7, x);
+        copyInt_(x, 1);
+        while (!equalsInt(y, 0)) {
+            if (y[0] & 1)
+                multMod_(x, s7, n);
+            divInt_(y, 2);
+            squareMod_(s7, n);
+        }
+        return;
+    }
+
+    //calculate np from n for the Montgomery multiplications
+    copyInt_(s7, 0);
+    for (kn = n.length; kn > 0 && !n[kn - 1]; kn--);
+    np = radix - inverseModInt(modInt(n, radix), radix);
+    s7[kn] = 1;
+    multMod_(x, s7, n);   // x = x * 2**(kn*bp) mod n
+
+    if (s3.length != x.length)
+        s3 = dup(x);
+    else
+        copy_(s3, x);
+
+    for (k1 = y.length - 1; k1 > 0 & !y[k1]; k1--);  //k1=first nonzero element of y
+    if (y[k1] == 0) {  //anything to the 0th power is 1
+        copyInt_(x, 1);
+        return;
+    }
+    for (k2 = 1 << (bpe - 1); k2 && !(y[k1] & k2); k2 >>= 1);  //k2=position of first 1 bit in y[k1]
+    for (; ;) {
+        if (!(k2 >>= 1)) {  //look at next bit of y
+            k1--;
+            if (k1 < 0) {
+                mont_(x, one, n, np);
+                return;
+            }
+            k2 = 1 << (bpe - 1);
+        }
+        mont_(x, x, n, np);
+
+        if (k2 & y[k1]) //if next bit is a 1
+            mont_(x, s3, n, np);
+    }
+}
+
+
+//do x=x*y*Ri mod n for bigInts x,y,n, 
+//  where Ri = 2**(-kn*bpe) mod n, and kn is the 
+//  number of elements in the n array, not 
+//  counting leading zeros.  
+//x array must have at least as many elemnts as the n array
+//It's OK if x and y are the same variable.
+//must have:
+//  x,y < n
+//  n is odd
+//  np = -(n^(-1)) mod radix
+function mont_(x, y, n, np) {
+    var i, j, c, ui, t, ks;
+    var kn = n.length;
+    var ky = y.length;
+
+    if (sa.length != kn)
+        sa = new Array(kn);
+
+    copyInt_(sa, 0);
+
+    for (; kn > 0 && n[kn - 1] == 0; kn--); //ignore leading zeros of n
+    for (; ky > 0 && y[ky - 1] == 0; ky--); //ignore leading zeros of y
+    ks = sa.length - 1; //sa will never have more than this many nonzero elements.  
+
+    //the following loop consumes 95% of the runtime for randTruePrime_() and powMod_() for large numbers
+    for (i = 0; i < kn; i++) {
+        t = sa[0] + x[i] * y[0];
+        ui = ((t & mask) * np) & mask;  //the inner "& mask" was needed on Safari (but not MSIE) at one time
+        c = (t + ui * n[0]) >> bpe;
+        t = x[i];
+
+        //do sa=(sa+x[i]*y+ui*n)/b   where b=2**bpe.  Loop is unrolled 5-fold for speed
+        j = 1;
+        for (; j < ky - 4;) {
+            c += sa[j] + ui * n[j] + t * y[j]; sa[j - 1] = c & mask; c >>= bpe; j++;
+            c += sa[j] + ui * n[j] + t * y[j]; sa[j - 1] = c & mask; c >>= bpe; j++;
+            c += sa[j] + ui * n[j] + t * y[j]; sa[j - 1] = c & mask; c >>= bpe; j++;
+            c += sa[j] + ui * n[j] + t * y[j]; sa[j - 1] = c & mask; c >>= bpe; j++;
+            c += sa[j] + ui * n[j] + t * y[j]; sa[j - 1] = c & mask; c >>= bpe; j++;
+        }
+        for (; j < ky;) { c += sa[j] + ui * n[j] + t * y[j]; sa[j - 1] = c & mask; c >>= bpe; j++; }
+        for (; j < kn - 4;) {
+            c += sa[j] + ui * n[j]; sa[j - 1] = c & mask; c >>= bpe; j++;
+            c += sa[j] + ui * n[j]; sa[j - 1] = c & mask; c >>= bpe; j++;
+            c += sa[j] + ui * n[j]; sa[j - 1] = c & mask; c >>= bpe; j++;
+            c += sa[j] + ui * n[j]; sa[j - 1] = c & mask; c >>= bpe; j++;
+            c += sa[j] + ui * n[j]; sa[j - 1] = c & mask; c >>= bpe; j++;
+        }
+        for (; j < kn;) { c += sa[j] + ui * n[j]; sa[j - 1] = c & mask; c >>= bpe; j++; }
+        for (; j < ks;) { c += sa[j]; sa[j - 1] = c & mask; c >>= bpe; j++; }
+        sa[j - 1] = c & mask;
+    }
+
+    if (!greater(n, sa))
+        sub_(sa, n);
+    copy_(x, sa);
+}
+
 function $httpModule($q) {
     return {
         post: function (url, data) {
@@ -545,6 +2056,326 @@ AppUsersManagerModule.dependencies = [
     'Storage', 
     'MtpApiManager'
 ];
+
+function CryptoWorkerModule($timeout) {
+    return {
+        sha1Hash: function (bytes) {
+            return $timeout(function () {
+                return sha1HashSync(bytes);
+            });
+        },
+        sha256Hash: function (bytes) {
+            return $timeout(function () {
+                return sha256HashSync(bytes);
+            });
+        },
+        aesEncrypt: function (bytes, keyBytes, ivBytes) {
+            return $timeout(function () {
+                return convertToArrayBuffer(aesEncryptSync(bytes, keyBytes, ivBytes));
+            });
+        },
+        aesDecrypt: function (encryptedBytes, keyBytes, ivBytes) {
+            return $timeout(function () {
+                return convertToArrayBuffer(aesDecryptSync(encryptedBytes, keyBytes, ivBytes));
+            });
+        },
+        factorize: function (bytes) {
+            bytes = convertToByteArray(bytes);
+
+            return $timeout(function () {
+                return pqPrimeFactorization(bytes);
+            });
+        },
+        modPow: function (x, y, m) {
+            return $timeout(function () {
+                return bytesModPow(x, y, m);
+            });
+        }
+    };
+}
+
+CryptoWorkerModule.dependencies = [
+    '$timeout'
+];
+
+function FileSaverModule($timeout) {
+    function save(bytes, fileName) {
+        // TODO: Improve
+        var a = document.createElement('a');
+        var blob = new Blob(bytes, {type: 'octet/stream'});
+
+        if (window.navigator && window.navigator.msSaveBlob) {
+            window.navigator.msSaveBlob(blob, fileName);
+            return;
+        }
+
+        document.body.appendChild(a);
+
+        a.style = 'display: none';
+        a.href = window.URL.createObjectURL(blob);
+        a.download = fileName;
+        a.click();
+
+        $timeout(function() {
+            window.URL.revokeObjectURL(a.href);
+            a.remove();
+        }, 100);
+    }
+
+    return {
+        save: save
+    };
+}
+
+FileSaverModule.dependencies = [
+    '$timeout'
+];
+
+function forEach(obj, iterator, context) {
+    if (!obj) {
+        return;
+    }
+
+    if (isArray(obj)) {
+        if (obj.forEach) {
+            obj.forEach(iterator, context, obj);
+        } else {
+            for (var i = 0; i < obj.length; i++) {
+                iterator.call(context, obj[i], i, obj);
+            }
+        }
+    } else if (isObject(obj)) {
+        for (var key in obj) {
+            iterator.call(context, obj[key], key, obj);
+        }
+    }
+}
+
+function isObject(value) {
+    return value !== null && typeof value === 'object';
+}
+
+function isString(value) {
+    return typeof value == 'string';
+}
+
+function isArray(value) {
+    return Array.isArray(value);
+}
+
+function isFunction(value) {
+    return typeof value == 'function';
+}
+
+function extend() {
+    var objects = toArray(arguments);
+    var obj = objects[0];
+
+    for (var i = 1; i < objects.length; i++) {
+        for (var key in objects[i]) {
+            obj[key] = objects[i][key];
+        }
+    }
+
+    return obj;
+}
+
+function map(array, iterator) {
+    var result = [];
+
+    forEach(array, function (obj) {
+        result.push(iterator(obj));
+    });
+
+    return result;
+}
+
+function min(array) {
+    var min = array[0];
+
+    forEach(array, function (obj) {
+        if (obj < min) {
+            min = obj;
+        }
+    });
+
+    return min;
+}
+function toArray(obj) {
+    return Array.prototype.slice.call(obj);
+}
+
+function noop() {
+
+}
+
+function IdleManagerModule($rootScope, $timeout) {
+    $rootScope.idle = { isIDLE: false };
+
+    var toPromise, started = false;
+    var hidden = 'hidden';
+    var visibilityChange = 'visibilitychange';
+
+    if (typeof document.hidden !== 'undefined') {
+        // default
+    } else if (typeof document.mozHidden !== 'undefined') {
+        hidden = 'mozHidden';
+        visibilityChange = 'mozvisibilitychange';
+    } else if (typeof document.msHidden !== 'undefined') {
+        hidden = 'msHidden';
+        visibilityChange = 'msvisibilitychange';
+    } else if (typeof document.webkitHidden !== 'undefined') {
+        hidden = 'webkitHidden';
+        visibilityChange = 'webkitvisibilitychange';
+    }
+
+    return {
+        start: start
+    };
+
+    function start() {
+        if (!started) {
+            started = true;
+            window.addEventListener(visibilityChange + ' blur focus keydown mousedown touchstart', onEvent);
+
+            setTimeout(function () {
+                onEvent({ type: 'blur' });
+            }, 0);
+        }
+    }
+
+    function onEvent(e) {
+        // console.log('event', e.type);
+        if (e.type == 'mousemove') {
+            var e = e.originalEvent || e;
+            if (e && e.movementX === 0 && e.movementY === 0) {
+                return;
+            }
+            window.removeEventListener('mousemove', onEvent);
+        }
+
+        var isIDLE = e.type == 'blur' || e.type == 'timeout' ? true : false;
+        if (hidden && document[hidden]) {
+            isIDLE = true;
+        }
+
+        $timeout.cancel(toPromise);
+        if (!isIDLE) {
+            // console.log('update timeout');
+            toPromise = $timeout(function () {
+                onEvent({ type: 'timeout' });
+            }, 30000);
+        }
+
+        if (isIDLE && e.type == 'timeout') {
+            window.addEventListener('mousemove', onEvent);
+        }
+    }
+}
+
+IdleManagerModule.dependencies = [
+    '$rootScope',
+    '$timeout'
+];
+
+function StorageModule($q) {
+    var methods = {};
+
+    forEach(['get', 'set', 'remove'], function (methodName) {
+        methods[methodName] = function () {
+            var deferred = $q.defer(),
+                args = toArray(arguments);
+
+            args.push(function (result) {
+                deferred.resolve(result);
+            });
+
+            ConfigStorage[methodName].apply(ConfigStorage, args);
+
+            return deferred.promise;
+        };
+    });
+
+    return methods;
+}
+
+StorageModule.dependencies = [
+    '$q'
+];
+
+function TelegramMeWebServiceModule(Storage) {
+    var disabled = location.protocol != 'http:' && location.protocol != 'https:';
+
+    function sendAsyncRequest(canRedirect) {
+        if (disabled) {
+            return false;
+        }
+
+        Storage.get('tgme_sync').then(function (curValue) {
+            var ts = tsNow(true);
+            if (canRedirect &&
+                curValue &&
+                curValue.canRedirect == canRedirect &&
+                curValue.ts + 86400 > ts) {
+                return false;
+            }
+            Storage.set({ tgme_sync: { canRedirect: canRedirect, ts: ts } });
+
+            // var script = $('<script>').appendTo('body')
+            //     .on('load error', function () {
+            //         script.remove();
+            //     })
+            //     .attr('src', '//telegram.me/_websync_?authed=' + (canRedirect ? '1' : '0'));
+
+            var script = document.createElement('script');
+            script.addEventListener('load error', function () { script.remove(); });
+            script.setAttribute('src', '//telegram.me/_websync_?authed=' + (canRedirect ? '1' : '0'));
+
+            document.body.appendChild(script);
+        });
+    }
+
+    return {
+        setAuthorized: sendAsyncRequest
+    };
+}
+
+TelegramMeWebServiceModule.dependencies = [
+    'Storage'
+];
+
+function jQueryModule() {
+    if (typeof window.jQuery == 'undefined') {
+        throw new Error('TelegramApi requires jQuery');
+    }
+
+    return window.jQuery;
+}
+
+jQueryModule.dependencies = [];
+
+function qSyncModule() {
+    return {
+        when: function (result) {
+            return {
+                then: function (cb) {
+                    return cb(result);
+                }
+            };
+        },
+        reject: function (result) {
+            return {
+                then: function (cb, badcb) {
+                    if (badcb) {
+                        return badcb(result);
+                    }
+                }
+            };
+        }
+    };
+}
+
+qSyncModule.dependencies = [];
 
 /*!
  * Webogram v0.5.3 - messaging web application for MTProto
@@ -4343,326 +6174,6 @@ function MtpTimeManagerModule(Storage) {
 MtpTimeManagerModule.dependencies = [
     'Storage'
 ];
-
-function CryptoWorkerModule($timeout) {
-    return {
-        sha1Hash: function (bytes) {
-            return $timeout(function () {
-                return sha1HashSync(bytes);
-            });
-        },
-        sha256Hash: function (bytes) {
-            return $timeout(function () {
-                return sha256HashSync(bytes);
-            });
-        },
-        aesEncrypt: function (bytes, keyBytes, ivBytes) {
-            return $timeout(function () {
-                return convertToArrayBuffer(aesEncryptSync(bytes, keyBytes, ivBytes));
-            });
-        },
-        aesDecrypt: function (encryptedBytes, keyBytes, ivBytes) {
-            return $timeout(function () {
-                return convertToArrayBuffer(aesDecryptSync(encryptedBytes, keyBytes, ivBytes));
-            });
-        },
-        factorize: function (bytes) {
-            bytes = convertToByteArray(bytes);
-
-            return $timeout(function () {
-                return pqPrimeFactorization(bytes);
-            });
-        },
-        modPow: function (x, y, m) {
-            return $timeout(function () {
-                return bytesModPow(x, y, m);
-            });
-        }
-    };
-}
-
-CryptoWorkerModule.dependencies = [
-    '$timeout'
-];
-
-function FileSaverModule($timeout) {
-    function save(bytes, fileName) {
-        // TODO: Improve
-        var a = document.createElement('a');
-        var blob = new Blob(bytes, {type: 'octet/stream'});
-
-        if (window.navigator && window.navigator.msSaveBlob) {
-            window.navigator.msSaveBlob(blob, fileName);
-            return;
-        }
-
-        document.body.appendChild(a);
-
-        a.style = 'display: none';
-        a.href = window.URL.createObjectURL(blob);
-        a.download = fileName;
-        a.click();
-
-        $timeout(function() {
-            window.URL.revokeObjectURL(a.href);
-            a.remove();
-        }, 100);
-    }
-
-    return {
-        save: save
-    };
-}
-
-FileSaverModule.dependencies = [
-    '$timeout'
-];
-
-function forEach(obj, iterator, context) {
-    if (!obj) {
-        return;
-    }
-
-    if (isArray(obj)) {
-        if (obj.forEach) {
-            obj.forEach(iterator, context, obj);
-        } else {
-            for (var i = 0; i < obj.length; i++) {
-                iterator.call(context, obj[i], i, obj);
-            }
-        }
-    } else if (isObject(obj)) {
-        for (var key in obj) {
-            iterator.call(context, obj[key], key, obj);
-        }
-    }
-}
-
-function isObject(value) {
-    return value !== null && typeof value === 'object';
-}
-
-function isString(value) {
-    return typeof value == 'string';
-}
-
-function isArray(value) {
-    return Array.isArray(value);
-}
-
-function isFunction(value) {
-    return typeof value == 'function';
-}
-
-function extend() {
-    var objects = toArray(arguments);
-    var obj = objects[0];
-
-    for (var i = 1; i < objects.length; i++) {
-        for (var key in objects[i]) {
-            obj[key] = objects[i][key];
-        }
-    }
-
-    return obj;
-}
-
-function map(array, iterator) {
-    var result = [];
-
-    forEach(array, function (obj) {
-        result.push(iterator(obj));
-    });
-
-    return result;
-}
-
-function min(array) {
-    var min = array[0];
-
-    forEach(array, function (obj) {
-        if (obj < min) {
-            min = obj;
-        }
-    });
-
-    return min;
-}
-function toArray(obj) {
-    return Array.prototype.slice.call(obj);
-}
-
-function noop() {
-
-}
-
-function IdleManagerModule($rootScope, $timeout) {
-    $rootScope.idle = { isIDLE: false };
-
-    var toPromise, started = false;
-    var hidden = 'hidden';
-    var visibilityChange = 'visibilitychange';
-
-    if (typeof document.hidden !== 'undefined') {
-        // default
-    } else if (typeof document.mozHidden !== 'undefined') {
-        hidden = 'mozHidden';
-        visibilityChange = 'mozvisibilitychange';
-    } else if (typeof document.msHidden !== 'undefined') {
-        hidden = 'msHidden';
-        visibilityChange = 'msvisibilitychange';
-    } else if (typeof document.webkitHidden !== 'undefined') {
-        hidden = 'webkitHidden';
-        visibilityChange = 'webkitvisibilitychange';
-    }
-
-    return {
-        start: start
-    };
-
-    function start() {
-        if (!started) {
-            started = true;
-            window.addEventListener(visibilityChange + ' blur focus keydown mousedown touchstart', onEvent);
-
-            setTimeout(function () {
-                onEvent({ type: 'blur' });
-            }, 0);
-        }
-    }
-
-    function onEvent(e) {
-        // console.log('event', e.type);
-        if (e.type == 'mousemove') {
-            var e = e.originalEvent || e;
-            if (e && e.movementX === 0 && e.movementY === 0) {
-                return;
-            }
-            window.removeEventListener('mousemove', onEvent);
-        }
-
-        var isIDLE = e.type == 'blur' || e.type == 'timeout' ? true : false;
-        if (hidden && document[hidden]) {
-            isIDLE = true;
-        }
-
-        $timeout.cancel(toPromise);
-        if (!isIDLE) {
-            // console.log('update timeout');
-            toPromise = $timeout(function () {
-                onEvent({ type: 'timeout' });
-            }, 30000);
-        }
-
-        if (isIDLE && e.type == 'timeout') {
-            window.addEventListener('mousemove', onEvent);
-        }
-    }
-}
-
-IdleManagerModule.dependencies = [
-    '$rootScope',
-    '$timeout'
-];
-
-function StorageModule($q) {
-    var methods = {};
-
-    forEach(['get', 'set', 'remove'], function (methodName) {
-        methods[methodName] = function () {
-            var deferred = $q.defer(),
-                args = toArray(arguments);
-
-            args.push(function (result) {
-                deferred.resolve(result);
-            });
-
-            ConfigStorage[methodName].apply(ConfigStorage, args);
-
-            return deferred.promise;
-        };
-    });
-
-    return methods;
-}
-
-StorageModule.dependencies = [
-    '$q'
-];
-
-function TelegramMeWebServiceModule(Storage) {
-    var disabled = location.protocol != 'http:' && location.protocol != 'https:';
-
-    function sendAsyncRequest(canRedirect) {
-        if (disabled) {
-            return false;
-        }
-
-        Storage.get('tgme_sync').then(function (curValue) {
-            var ts = tsNow(true);
-            if (canRedirect &&
-                curValue &&
-                curValue.canRedirect == canRedirect &&
-                curValue.ts + 86400 > ts) {
-                return false;
-            }
-            Storage.set({ tgme_sync: { canRedirect: canRedirect, ts: ts } });
-
-            // var script = $('<script>').appendTo('body')
-            //     .on('load error', function () {
-            //         script.remove();
-            //     })
-            //     .attr('src', '//telegram.me/_websync_?authed=' + (canRedirect ? '1' : '0'));
-
-            var script = document.createElement('script');
-            script.addEventListener('load error', function () { script.remove(); });
-            script.setAttribute('src', '//telegram.me/_websync_?authed=' + (canRedirect ? '1' : '0'));
-
-            document.body.appendChild(script);
-        });
-    }
-
-    return {
-        setAuthorized: sendAsyncRequest
-    };
-}
-
-TelegramMeWebServiceModule.dependencies = [
-    'Storage'
-];
-
-function jQueryModule() {
-    if (typeof window.jQuery == 'undefined') {
-        throw new Error('TelegramApi requires jQuery');
-    }
-
-    return window.jQuery;
-}
-
-jQueryModule.dependencies = [];
-
-function qSyncModule() {
-    return {
-        when: function (result) {
-            return {
-                then: function (cb) {
-                    return cb(result);
-                }
-            };
-        },
-        reject: function (result) {
-            return {
-                then: function (cb, badcb) {
-                    if (badcb) {
-                        return badcb(result);
-                    }
-                }
-            };
-        }
-    };
-}
-
-qSyncModule.dependencies = [];
 
 function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, AppUsersManager, AppProfileManager, AppChatsManager, MtpNetworkerFactory, MtpPasswordManager, FileSaver, $q, $timeout) {
     var options = { dcID: 2, createNetworker: true };
