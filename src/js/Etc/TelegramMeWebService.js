@@ -1,4 +1,4 @@
-function TelegramMeWebServiceModule(Storage, $) {
+function TelegramMeWebServiceModule(Storage) {
     var disabled = location.protocol != 'http:' && location.protocol != 'https:';
 
     function sendAsyncRequest(canRedirect) {
@@ -14,13 +14,19 @@ function TelegramMeWebServiceModule(Storage, $) {
                 curValue.ts + 86400 > ts) {
                 return false;
             }
-            Storage.set({tgme_sync: {canRedirect: canRedirect, ts: ts}});
+            Storage.set({ tgme_sync: { canRedirect: canRedirect, ts: ts } });
 
-            var script = $('<script>').appendTo('body')
-                .on('load error', function () {
-                    script.remove();
-                })
-                .attr('src', '//telegram.me/_websync_?authed=' + (canRedirect ? '1' : '0'));
+            // var script = $('<script>').appendTo('body')
+            //     .on('load error', function () {
+            //         script.remove();
+            //     })
+            //     .attr('src', '//telegram.me/_websync_?authed=' + (canRedirect ? '1' : '0'));
+
+            var script = document.createElement('script');
+            script.addEventListener('load error', function () { script.remove(); });
+            script.setAttribute('src', '//telegram.me/_websync_?authed=' + (canRedirect ? '1' : '0'));
+
+            document.body.appendChild(script);
         });
     }
 
@@ -30,6 +36,5 @@ function TelegramMeWebServiceModule(Storage, $) {
 }
 
 TelegramMeWebServiceModule.dependencies = [
-    'Storage',
-    'jQuery'
+    'Storage'
 ];

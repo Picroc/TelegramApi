@@ -1,5 +1,5 @@
-function IdleManagerModule($rootScope, $timeout, $) {
-    $rootScope.idle = {isIDLE: false};
+function IdleManagerModule($rootScope, $timeout) {
+    $rootScope.idle = { isIDLE: false };
 
     var toPromise, started = false;
     var hidden = 'hidden';
@@ -25,10 +25,10 @@ function IdleManagerModule($rootScope, $timeout, $) {
     function start() {
         if (!started) {
             started = true;
-            $(window).on(visibilityChange + ' blur focus keydown mousedown touchstart', onEvent);
+            window.addEventListener(visibilityChange + ' blur focus keydown mousedown touchstart', onEvent);
 
             setTimeout(function () {
-                onEvent({type: 'blur'});
+                onEvent({ type: 'blur' });
             }, 0);
         }
     }
@@ -40,7 +40,7 @@ function IdleManagerModule($rootScope, $timeout, $) {
             if (e && e.movementX === 0 && e.movementY === 0) {
                 return;
             }
-            $(window).off('mousemove', onEvent);
+            window.removeEventListener('mousemove', onEvent);
         }
 
         var isIDLE = e.type == 'blur' || e.type == 'timeout' ? true : false;
@@ -52,18 +52,17 @@ function IdleManagerModule($rootScope, $timeout, $) {
         if (!isIDLE) {
             // console.log('update timeout');
             toPromise = $timeout(function () {
-                onEvent({type: 'timeout'});
+                onEvent({ type: 'timeout' });
             }, 30000);
         }
 
         if (isIDLE && e.type == 'timeout') {
-            $(window).on('mousemove', onEvent);
+            window.addEventListener('mousemove', onEvent);
         }
     }
 }
 
 IdleManagerModule.dependencies = [
-    '$rootScope', 
-    '$timeout',
-    'jQuery'
+    '$rootScope',
+    '$timeout'
 ];

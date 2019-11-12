@@ -1,4 +1,4 @@
-function MtpSingleInstanceServiceModule(IdleManager, Storage, MtpNetworkerFactory, $interval, $rootScope, $timeout, $) {
+function MtpSingleInstanceServiceModule(IdleManager, Storage, MtpNetworkerFactory, $interval, $rootScope, $timeout) {
     var instanceID = nextRandomInt(0xFFFFFFFF);
     var started = false;
     var masterInstance = false;
@@ -11,11 +11,13 @@ function MtpSingleInstanceServiceModule(IdleManager, Storage, MtpNetworkerFactor
 
             IdleManager.start();
 
-            $interval(checkInstance, 5000);
+            // $interval(checkInstance, 5000);
+            setInterval(checkInstance, 5000);
             checkInstance();
 
             try {
-                $(window).on('beforeunload', clearInstance);
+                // $(window).on('beforeunload', clearInstance);
+                window.addEventListener('beforeunload', clearInstance);
             } catch (e) {
             }
         }
@@ -43,7 +45,7 @@ function MtpSingleInstanceServiceModule(IdleManager, Storage, MtpNetworkerFactor
         }
         var time = tsNow();
         var idle = $rootScope.idle && $rootScope.idle.isIDLE;
-        var newInstance = {id: instanceID, idle: idle, time: time};
+        var newInstance = { id: instanceID, idle: idle, time: time };
 
         Storage.get('xt_instance', 'xt_idle_instance').then(function (result) {
             var curInstance = result[0],
@@ -58,7 +60,7 @@ function MtpSingleInstanceServiceModule(IdleManager, Storage, MtpNetworkerFactor
                     idleInstance.id == instanceID) {
                     Storage.remove('xt_idle_instance');
                 }
-                Storage.set({xt_instance: newInstance});
+                Storage.set({ xt_instance: newInstance });
                 if (!masterInstance) {
                     MtpNetworkerFactory.startAll();
                     console.warn(dT(), 'now master instance', newInstance);
@@ -69,7 +71,7 @@ function MtpSingleInstanceServiceModule(IdleManager, Storage, MtpNetworkerFactor
                     deactivatePromise = false;
                 }
             } else {
-                Storage.set({xt_idle_instance: newInstance});
+                Storage.set({ xt_idle_instance: newInstance });
                 if (masterInstance) {
                     MtpNetworkerFactory.stopAll();
                     console.warn(dT(), 'now idle instance', newInstance);
@@ -88,11 +90,10 @@ function MtpSingleInstanceServiceModule(IdleManager, Storage, MtpNetworkerFactor
 }
 
 MtpSingleInstanceServiceModule.dependencies = [
-    'IdleManager', 
+    'IdleManager',
     'Storage',
     'MtpNetworkerFactory',
-    '$interval', 
-    '$rootScope', 
-    '$timeout',
-    'jQuery'
+    '$interval',
+    '$rootScope',
+    '$timeout'
 ];

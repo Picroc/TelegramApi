@@ -1,7 +1,7 @@
-function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, AppUsersManager, AppProfileManager, AppChatsManager, MtpNetworkerFactory, FileSaver, $q, $timeout) {
-    var options = {dcID: 2, createNetworker: true};
+function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, AppUsersManager, AppProfileManager, AppChatsManager, MtpNetworkerFactory, MtpPasswordManager, FileSaver, $q, $timeout) {
+    var options = { dcID: 2, createNetworker: true };
 
-    MtpNetworkerFactory.setUpdatesProcessor(function(message) {
+    MtpNetworkerFactory.setUpdatesProcessor(function (message) {
         switch (message._) {
             case 'updates':
                 AppChatsManager.saveApiChats(message.chats);
@@ -44,6 +44,8 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
         subscribe: subscribe,
         unSubscribe: unSubscribe,
         logOut: logOut,
+        signIn2FA: signIn2FA,
+        setUp2FA: setUp2FA,
 
         invokeApi: invokeApi,
         dT: dT,
@@ -91,11 +93,31 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
             phone_number: phone_number,
             phone_code_hash: phone_code_hash,
             phone_code: phone_code
-        }, options).then(function(result) {
+        }, options).then(function (result) {
             MtpApiManager.setUserAuth(options.dcID, {
                 id: result.user.id
             });
+            return result;
         });
+    }
+
+    function signIn2FA(password) {
+        return MtpPasswordManager.getState()
+            .then(function (result) {
+                return MtpPasswordManager.check(result, password, options);
+            });
+    }
+
+    function setUp2FA(old_password, password, email, hint) {
+        return MtpPasswordManager.getState()
+            .then(function (result) {
+                return MtpPasswordManager.updateSettings(result, {
+                    cur_password: old_password,
+                    new_password: password,
+                    email: email,
+                    hint: hint
+                });
+            });
     }
 
     /**
@@ -115,7 +137,7 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
             phone_code: phone_code,
             first_name: first_name || '',
             last_name: last_name || ''
-        }, options).then(function(result) {
+        }, options).then(function (result) {
             MtpApiManager.setUserAuth(options.dcID, {
                 id: result.user.id
             });
@@ -147,7 +169,7 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
      * @example <%example:startBot.js%>
      */
     function startBot(botName) {
-        return MtpApiManager.invokeApi('contacts.search', {q: botName, limit: 1}).then(function(result) {
+        return MtpApiManager.invokeApi('contacts.search', { q: botName, limit: 1 }).then(function (result) {
             AppUsersManager.saveApiUsers(result.users);
             return sendMessage(result.users[0].id, '/start');
         });
@@ -160,10 +182,11 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
      * @param {String} phone_code_hash - Code hash (was received in sendCode method)
      * @example <%example:sendSms.js%>
      */
-    function sendSms(phone_number, phone_code_hash) {
-        return MtpApiManager.invokeApi('auth.sendSms', {
+    function sendSms(phone_number, phone_code_hash, next_type) {
+        return MtpApiManager.invokeApi('auth.resendCode', {
             phone_number: phone_number,
-            phone_code_hash: phone_code_hash
+            phone_code_hash: phone_code_hash,
+            next_type: next_type
         }, options);
     }
 
@@ -194,9 +217,9 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
         Config.Server.Test = config.server.test;
         Config.Server.Production = config.server.production;
 
-        MtpApiManager.invokeApi('help.getNearestDc', {}, options).then(function(nearestDcResult) {
+        MtpApiManager.invokeApi('help.getNearestDc', {}, options).then(function (nearestDcResult) {
             if (nearestDcResult.nearest_dc != nearestDcResult.this_dc) {
-                MtpApiManager.getNetworker(nearestDcResult.nearest_dc, {createNetworker: true});
+                MtpApiManager.getNetworker(nearestDcResult.nearest_dc, { createNetworker: true });
             }
         });
     }
@@ -225,7 +248,7 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
         return MtpApiManager.invokeApi('messages.createChat', {
             title: title,
             users: inputUsers
-        }).then(function(updates) {
+        }).then(function (updates) {
             // TODO: Remove
             if (updates.chats && updates.chats[0]) {
                 return MtpApiManager.invokeApi('messages.toggleChatAdmins', {
@@ -255,15 +278,15 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
      * @example <%example:getUserInfo.js%>
      */
     function getUserInfo() {
-        return MtpApiManager.getUserID().then(function(id) {
+        return MtpApiManager.getUserID().then(function (id) {
             var user = AppUsersManager.getUser(id);
 
             if (!user.id || !user.deleted) {
                 return user;
             } else {
                 return MtpApiManager.invokeApi('users.getFullUser', {
-                    id: {_: 'inputUserSelf'}
-                }).then(function(userInfoFull) {
+                    id: { _: 'inputUserSelf' }
+                }).then(function (userInfoFull) {
                     AppUsersManager.saveApiUser(userInfoFull.user);
                     return AppUsersManager.getUser(id);
                 });
@@ -279,7 +302,7 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
      * @example <%example:getUserPhoto.js%>
      */
     function getUserPhoto(type, size) {
-        return getUserInfo().then(function(user) {
+        return getUserInfo().then(function (user) {
             if (!user.photo) {
                 return null;
             }
@@ -304,14 +327,14 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
                 location: location,
                 offset: 0,
                 limit: 524288
-            }, params).then(function(result) {
+            }, params).then(function (result) {
                 switch (type) {
                     case 'byteArray':
                         return result.bytes;
                     case 'base64':
                         return "data:image/jpeg;base64," + btoa(String.fromCharCode.apply(null, result.bytes));
                     case 'blob':
-                        return new Blob([result.bytes], {type: 'image/jpeg'});
+                        return new Blob([result.bytes], { type: 'image/jpeg' });
                     default:
                         return result.bytes;
                 }
@@ -340,7 +363,7 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
             title: title || '',
             flags: 0,
             about: about || ''
-        }, options).then(function(data) {
+        }, options).then(function (data) {
             AppChatsManager.saveApiChats(data.chats);
             return data;
         });
@@ -396,7 +419,7 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
             params.id = params.id * -1;
         }
 
-        return MtpApiFileManager.uploadFile(params.file).then(function(inputFile) {
+        return MtpApiFileManager.uploadFile(params.file).then(function (inputFile) {
             var file = params.file;
 
             inputFile.name = file.name;
@@ -407,7 +430,7 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
                 mime_type: file.type,
                 caption: params.caption,
                 attributes: [
-                    {_: 'documentAttributeFilename', file_name: file.name}
+                    { _: 'documentAttributeFilename', file_name: file.name }
                 ]
             };
 
@@ -456,7 +479,7 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
 
         size = doc.size;
 
-        forEach(doc.attributes, function(attr) {
+        forEach(doc.attributes, function (attr) {
             if (attr._ == 'documentAttributeFilename') {
                 fileName = attr.file_name;
             }
@@ -468,7 +491,7 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
                     location: location,
                     offset: offset,
                     limit: limit
-                }).then(function(result) {
+                }).then(function (result) {
                     bytes.push(result.bytes);
                     offset += limit;
                     progress(offset < size ? offset : size, size);
@@ -507,7 +530,7 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
             hash = link;
         }
 
-        return MtpApiManager.invokeApi('messages.importChatInvite', {hash: hash}).then(function(updates) {
+        return MtpApiManager.invokeApi('messages.importChatInvite', { hash: hash }).then(function (updates) {
             AppChatsManager.saveApiChats(updates.chats);
             AppUsersManager.saveApiUsers(updates.users);
         });
@@ -555,12 +578,12 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
         return MtpApiManager.invokeApi('channels.editAdmin', {
             channel: AppChatsManager.getChannelInput(channel_id),
             user_id: AppUsersManager.getUserInput(user_id),
-            role: {_: 'channelRoleEditor'}
+            role: { _: 'channelRoleEditor' }
         });
     }
 
     function getFullChat(chat_id) {
-        return MtpApiManager.invokeApi('messages.getFullChat', {chat_id: chat_id});
+        return MtpApiManager.invokeApi('messages.getFullChat', { chat_id: chat_id });
     }
 
     function downloadPhoto(photo, progress, autosave) {
@@ -595,7 +618,7 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
                     location: location,
                     offset: offset,
                     limit: limit
-                }).then(function(result) {
+                }).then(function (result) {
                     bytes.push(result.bytes);
                     offset += limit;
                     progress(offset < size ? offset : size, size);
@@ -630,7 +653,7 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
             ids = [ids];
         }
 
-        return MtpApiManager.invokeApi('messages.deleteMessages', {id: ids});
+        return MtpApiManager.invokeApi('messages.deleteMessages', { id: ids });
     }
 
     function subscribe(id, handler) {
@@ -664,7 +687,7 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
                 offset_peer: AppPeersManager.getInputPeerByID(0),
                 limit: 100,
                 offset_date: offsetDate
-            }).then(function(result) {
+            }).then(function (result) {
                 AppChatsManager.saveApiChats(result.chats);
                 AppUsersManager.saveApiUsers(result.users);
 
@@ -679,7 +702,7 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
                 }
 
                 if (totalCount && dialogsLoaded < totalCount) {
-                    var dates = map(result.messages, function(msg) {
+                    var dates = map(result.messages, function (msg) {
                         return msg.date;
                     });
                     offsetDate = min(dates);
@@ -687,8 +710,8 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
                     return;
                 }
 
-                defer.reject({type: 'PEER_NOT_FOUND'});
-            }, function(err) {
+                defer.reject({ type: 'PEER_NOT_FOUND' });
+            }, function (err) {
                 defer.reject(err);
             });
         })();
@@ -714,7 +737,7 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
     }
 
     function editChatPhoto(chat_id, photo) {
-        return MtpApiFileManager.uploadFile(photo).then(function(inputFile) {
+        return MtpApiFileManager.uploadFile(photo).then(function (inputFile) {
             return MtpApiManager.invokeApi('messages.editChatPhoto', {
                 chat_id: chat_id,
                 photo: {
@@ -729,7 +752,7 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
     }
 
     function editChannelPhoto(channel_id, photo) {
-        return MtpApiFileManager.uploadFile(photo).then(function(inputFile) {
+        return MtpApiFileManager.uploadFile(photo).then(function (inputFile) {
             return MtpApiManager.invokeApi('channels.editPhoto', {
                 channel: AppChatsManager.getChannelInput(channel_id),
                 photo: {
@@ -744,7 +767,7 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
     }
 
     function checkPhone(phone_number) {
-        return MtpApiManager.invokeApi('auth.checkPhone', {phone_number: phone_number});
+        return MtpApiManager.invokeApi('auth.checkPhone', { phone_number: phone_number });
     }
 
     function getDialogs(offset, limit) {
@@ -755,11 +778,11 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
             offset_peer: AppPeersManager.getInputPeerByID(0),
             offset_date: offset,
             limit: limit
-        }).then(function(dialogsResult) {
+        }).then(function (dialogsResult) {
             AppUsersManager.saveApiUsers(dialogsResult.users);
             AppChatsManager.saveApiChats(dialogsResult.chats);
 
-            var dates = map(dialogsResult.messages, function(msg) {
+            var dates = map(dialogsResult.messages, function (msg) {
                 return msg.date;
             });
 
@@ -775,7 +798,7 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
             ids = [ids];
         }
 
-        return MtpApiManager.invokeApi('messages.getMessages', {id: ids}).then(function(updates) {
+        return MtpApiManager.invokeApi('messages.getMessages', { id: ids }).then(function (updates) {
             AppUsersManager.saveApiUsers(updates.users);
             AppChatsManager.saveApiChats(updates.chats);
 
@@ -792,6 +815,7 @@ TelegramApiModule.dependencies = [
     'AppProfileManager',
     'AppChatsManager',
     'MtpNetworkerFactory',
+    'MtpPasswordManager',
     'FileSaver',
     '$q',
     '$timeout'

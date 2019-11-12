@@ -17,6 +17,7 @@ builder.register('MtpRsaKeysManager', MtpRsaKeysManagerModule);
 builder.register('MtpSecureRandom', MtpSecureRandomModule);
 builder.register('MtpSingleInstanceService', MtpSingleInstanceServiceModule);
 builder.register('MtpTimeManager', MtpTimeManagerModule);
+builder.register('MtpPasswordManager', MtpPasswordManagerModule);
 
 // Register Angular modules
 builder.register('$http', $httpModule);
