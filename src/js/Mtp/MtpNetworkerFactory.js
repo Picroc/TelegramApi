@@ -1,4 +1,4 @@
-function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, CryptoWorker, MtpDcConfigurator, $timeout, $interval, $q, $http) {
+function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, CryptoWorker, MtpDcConfigurator, $timeout, $interval, $http) {
     var updatesProcessor,
         akStopped = false,
         chromeMatches = navigator.userAgent.match(/Chrome\/(\d+(\.\d+)?)/),
@@ -93,7 +93,7 @@ function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, Cry
     };
 
     MtpNetworker.prototype.wrapMtpCall = function (method, params, options) {
-        var serializer = new TLSerialization({mtproto: true});
+        var serializer = new TLSerialization({ mtproto: true });
 
         serializer.storeMethod(method, params);
 
@@ -115,7 +115,7 @@ function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, Cry
     MtpNetworker.prototype.wrapMtpMessage = function (object, options) {
         options = options || {};
 
-        var serializer = new TLSerialization({mtproto: true});
+        var serializer = new TLSerialization({ mtproto: true });
         serializer.storeObject(object, 'Object');
 
         var messageID = MtpTimeManager.generateID(),
@@ -183,10 +183,10 @@ function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, Cry
         var self = this;
         Storage.get('dc').then(function (baseDcID) {
             if (isClean && (
-                    baseDcID != self.dcID ||
-                    self.upload ||
-                    self.sleepAfter && tsNow() > self.sleepAfter
-                )) {
+                baseDcID != self.dcID ||
+                self.upload ||
+                self.sleepAfter && tsNow() > self.sleepAfter
+            )) {
                 // console.warn(dT(), 'Send long-poll for DC is delayed', self.dcID, self.sleepAfter);
                 return;
             }
@@ -218,19 +218,19 @@ function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, Cry
     };
 
     MtpNetworker.prototype.pushMessage = function (message, options) {
-        var deferred = $q.defer();
+        var self = this;
 
-        this.sentMessages[message.msg_id] = extend(message, options || {}, {deferred: deferred});
-        this.pendingMessages[message.msg_id] = 0;
+        return new Promise(function (resolve, reject) {
+            self.sentMessages[message.msg_id] = extend(message, options || {}, { deferred: { resolve: resolve, reject: reject } });
+            self.pendingMessages[message.msg_id] = 0;
 
-        if (!options || !options.noShedule) {
-            this.sheduleRequest();
-        }
-        if (isObject(options)) {
-            options.messageID = message.msg_id;
-        }
-
-        return deferred.promise;
+            if (!options || !options.noShedule) {
+                self.sheduleRequest();
+            }
+            if (isObject(options)) {
+                options.messageID = message.msg_id;
+            }
+        });
     };
 
     MtpNetworker.prototype.pushResend = function (messageID, delay) {
@@ -275,35 +275,56 @@ function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, Cry
         sha1dText.set(authKey.subarray(x + 96, x + 128), 16);
         promises.sha1d = CryptoWorker.sha1Hash(sha1dText);
 
-        return $q.all(promises).then(function (result) {
-            var aesKey = new Uint8Array(32),
-                aesIv = new Uint8Array(32),
-                sha1a = new Uint8Array(result.sha1a),
-                sha1b = new Uint8Array(result.sha1b),
-                sha1c = new Uint8Array(result.sha1c),
-                sha1d = new Uint8Array(result.sha1d);
 
-            aesKey.set(sha1a.subarray(0, 8));
-            aesKey.set(sha1b.subarray(8, 20), 8);
-            aesKey.set(sha1c.subarray(4, 16), 20);
+        return new Promise(function (resolve, reject) {
+            var p = [];
+            var keys = Object.keys(promises);
 
-            aesIv.set(sha1a.subarray(8, 20));
-            aesIv.set(sha1b.subarray(0, 8), 12);
-            aesIv.set(sha1c.subarray(16, 20), 20);
-            aesIv.set(sha1d.subarray(0, 8), 24);
+            forEach(keys, function (key) {
+                p.push(promises[key]);
+            });
 
-            return [aesKey, aesIv];
-        });
+            Promise.all(p)
+                .then(function (resp) {
+                    var objects = toArray(resp);
+                    var result = {};
+
+                    forEach(keys, function (key, i) {
+                        result[key] = objects[i];
+                    });
+
+                    resolve(result);
+                });
+        })
+            .then(function (result) {
+                var aesKey = new Uint8Array(32),
+                    aesIv = new Uint8Array(32),
+                    sha1a = new Uint8Array(result.sha1a),
+                    sha1b = new Uint8Array(result.sha1b),
+                    sha1c = new Uint8Array(result.sha1c),
+                    sha1d = new Uint8Array(result.sha1d);
+
+                aesKey.set(sha1a.subarray(0, 8));
+                aesKey.set(sha1b.subarray(8, 20), 8);
+                aesKey.set(sha1c.subarray(4, 16), 20);
+
+                aesIv.set(sha1a.subarray(8, 20));
+                aesIv.set(sha1b.subarray(0, 8), 12);
+                aesIv.set(sha1c.subarray(16, 20), 20);
+                aesIv.set(sha1d.subarray(0, 8), 24);
+
+                return [aesKey, aesIv];
+            });
     };
 
     MtpNetworker.prototype.checkConnection = function (event) {
         console.log(dT(), 'Check connection', event);
         $timeout.cancel(this.checkConnectionPromise);
 
-        var serializer = new TLSerialization({mtproto: true}),
+        var serializer = new TLSerialization({ mtproto: true }),
             pingID = [nextRandomInt(0xFFFFFFFF), nextRandomInt(0xFFFFFFFF)];
 
-        serializer.storeMethod('ping', {ping_id: pingID});
+        serializer.storeMethod('ping', { ping_id: pingID });
 
         var pingMessage = {
             msg_id: MtpTimeManager.generateID(),
@@ -312,7 +333,7 @@ function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, Cry
         };
 
         var self = this;
-        this.sendEncryptedRequest(pingMessage, {timeout: 15000}).then(function (result) {
+        this.sendEncryptedRequest(pingMessage, { timeout: 15000 }).then(function (result) {
             self.toggleOffline(false);
         }, function () {
             console.log(dT(), 'Delay ', self.checkConnectionPeriod * 1000);
@@ -369,18 +390,18 @@ function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, Cry
                 ackMsgIDs.push(this.pendingAcks[i]);
             }
             // console.log('acking messages', ackMsgIDs);
-            this.wrapMtpMessage({_: 'msgs_ack', msg_ids: ackMsgIDs}, {notContentRelated: true, noShedule: true});
+            this.wrapMtpMessage({ _: 'msgs_ack', msg_ids: ackMsgIDs }, { notContentRelated: true, noShedule: true });
         }
 
         if (this.pendingResends.length) {
             var resendMsgIDs = [],
-                resendOpts = {noShedule: true, notContentRelated: true};
+                resendOpts = { noShedule: true, notContentRelated: true };
             for (var i = 0; i < this.pendingResends.length; i++) {
                 resendMsgIDs.push(this.pendingResends[i]);
             }
             // console.log('resendReq messages', resendMsgIDs);
-            this.wrapMtpMessage({_: 'msg_resend_req', msg_ids: resendMsgIDs}, resendOpts);
-            this.lastResendReq = {req_msg_id: resendOpts.messageID, resend_msg_ids: resendMsgIDs};
+            this.wrapMtpMessage({ _: 'msg_resend_req', msg_ids: resendMsgIDs }, resendOpts);
+            this.lastResendReq = { req_msg_id: resendOpts.messageID, resend_msg_ids: resendMsgIDs };
         }
 
         var messages = [],
@@ -429,7 +450,7 @@ function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, Cry
         });
 
         if (hasApiCall && !hasHttpWait) {
-            var serializer = new TLSerialization({mtproto: true});
+            var serializer = new TLSerialization({ mtproto: true });
             serializer.storeMethod('http_wait', {
                 max_delay: 500,
                 wait_after: 150,
@@ -450,7 +471,7 @@ function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, Cry
         var noResponseMsgs = [];
 
         if (messages.length > 1) {
-            var container = new TLSerialization({mtproto: true, startMaxLength: messagesByteLen + 64});
+            var container = new TLSerialization({ mtproto: true, startMaxLength: messagesByteLen + 64 });
             container.storeInt(0x73f1f8dc, 'CONTAINER[id]');
             container.storeInt(messages.length, 'CONTAINER[count]');
             var onloads = [];
@@ -473,7 +494,7 @@ function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, Cry
                 inner: innerMessages
             };
 
-            message = extend({body: container.getBytes(true)}, containerSentMessage);
+            message = extend({ body: container.getBytes(true) }, containerSentMessage);
 
             this.sentMessages[message.msg_id] = containerSentMessage;
 
@@ -579,7 +600,7 @@ function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, Cry
         options = options || {};
         // console.log(dT(), 'Send encrypted'/*, message*/);
         // console.trace();
-        var data = new TLSerialization({startMaxLength: message.body.length + 64});
+        var data = new TLSerialization({ startMaxLength: message.body.length + 64 });
 
         data.storeIntBytes(this.serverSalt, 64, 'salt');
         data.storeIntBytes(this.sessionID, 64, 'session_id');
@@ -592,7 +613,7 @@ function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, Cry
 
         return this.getEncryptedMessage(data.getBuffer()).then(function (encryptedResult) {
             // console.log(dT(), 'Got encrypted out message'/*, encryptedResult*/);
-            var request = new TLSerialization({startMaxLength: encryptedResult.bytes.byteLength + 256});
+            var request = new TLSerialization({ startMaxLength: encryptedResult.bytes.byteLength + 256 });
             request.storeIntBytes(self.authKeyID, 64, 'auth_key_id');
             request.storeIntBytes(encryptedResult.msgKey, 128, 'msg_key');
             request.storeRawBytes(encryptedResult.bytes, 'encrypted_data');
@@ -601,7 +622,7 @@ function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, Cry
 
             var requestPromise;
             var url = MtpDcConfigurator.chooseServer(self.dcID, self.upload);
-            var baseError = {code: 406, type: 'NETWORK_BAD_RESPONSE', url: url};
+            var baseError = { code: 406, type: 'NETWORK_BAD_RESPONSE', url: url };
 
             try {
                 options = extend(options || {}, {
@@ -610,12 +631,12 @@ function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, Cry
                 });
                 requestPromise = $http.post(url, requestData, options);
             } catch (e) {
-                requestPromise = $q.reject(e);
+                requestPromise = Promise.reject(e);
             }
             return requestPromise.then(
                 function (result) {
                     if (!result.data || !result.data.byteLength) {
-                        return $q.reject(baseError);
+                        return Promise.reject(baseError);
                     }
                     return result;
                 },
@@ -630,9 +651,9 @@ function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, Cry
                         });
                     }
                     if (!error.message && !error.type) {
-                        error = extend(baseError, {type: 'NETWORK_BAD_REQUEST', originalError: error});
+                        error = extend(baseError, { type: 'NETWORK_BAD_REQUEST', originalError: error });
                     }
-                    return $q.reject(error);
+                    return Promise.reject(error);
                 }
             );
         });
@@ -653,7 +674,7 @@ function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, Cry
 
         return this.getDecryptedMessage(msgKey, encryptedData).then(function (dataWithPadding) {
             // console.log(dT(), 'after decrypt');
-            var deserializer = new TLDeserialization(dataWithPadding, {mtproto: true});
+            var deserializer = new TLDeserialization(dataWithPadding, { mtproto: true });
 
             var salt = deserializer.fetchIntBytes(64, false, 'salt');
             var sessionID = deserializer.fetchIntBytes(64, false, 'session_id');
@@ -687,7 +708,7 @@ function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, Cry
                                 result.body = this.fetchObject('Object', field + '[body]');
                             } catch (e) {
                                 console.error(dT(), 'parse error', e.message, e.stack);
-                                result.body = {_: 'parse_error', error: e};
+                                result.body = { _: 'parse_error', error: e };
                             }
                             if (this.offset != offset + result.bytes) {
                                 // console.warn(dT(), 'set offset', this.offset, offset, result.bytes);
@@ -857,8 +878,8 @@ function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, Cry
 
                 if (message.error_code == 16 || message.error_code == 17) {
                     if (MtpTimeManager.applyServerTime(
-                            bigStringInt(messageID).shiftRight(32).toString(10)
-                        )) {
+                        bigStringInt(messageID).shiftRight(32).toString(10)
+                    )) {
                         console.log(dT(), 'Update session');
                         this.updateSession();
                     }
@@ -973,7 +994,7 @@ function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, Cry
     function startAll() {
         if (akStopped) {
             akStopped = false;
-            updatesProcessor({_: 'new_session_created'});
+            updatesProcessor({ _: 'new_session_created' });
         }
     }
 
@@ -983,6 +1004,7 @@ function MtpNetworkerFactoryModule(MtpSecureRandom, MtpTimeManager, Storage, Cry
 
     return {
         getNetworker: function (dcID, authKey, serverSalt, options) {
+            console.log("NETWORKER", dcID, authKey, serverSalt, options);
             return new MtpNetworker(dcID, authKey, serverSalt, options);
         },
         setUpdatesProcessor: function (callback) {
@@ -1004,6 +1026,5 @@ MtpNetworkerFactoryModule.dependencies = [
     'MtpDcConfigurator',
     '$timeout',
     '$interval',
-    '$q',
-    '$http'
+    '$http',
 ];

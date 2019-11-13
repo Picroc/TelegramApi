@@ -1,4 +1,4 @@
-function MtpPasswordManagerModule(MtpApiManager, CryptoWorker, MtpSecureRandom, $timeout, $q, $rootScope) {
+function MtpPasswordManagerModule(MtpApiManager, CryptoWorker, MtpSecureRandom) {
     return {
         check: check,
         getState: getState,
@@ -31,7 +31,7 @@ function MtpPasswordManagerModule(MtpApiManager, CryptoWorker, MtpSecureRandom, 
             settings.cur_password.length > 0) {
             currentHashPromise = makePasswordHash(state.current_salt, settings.cur_password)
         } else {
-            currentHashPromise = $q.when([])
+            currentHashPromise = Promise.resolve([])
         }
 
         if (typeof settings.new_password === 'string' &&
@@ -47,7 +47,7 @@ function MtpPasswordManagerModule(MtpApiManager, CryptoWorker, MtpSecureRandom, 
                 params.new_settings.flags |= 1
                 params.new_settings.new_salt = []
             }
-            newHashPromise = $q.when([])
+            newHashPromise = Promise.resolve([])
         }
 
         if (typeof settings.email === 'string') {
@@ -55,7 +55,7 @@ function MtpPasswordManagerModule(MtpApiManager, CryptoWorker, MtpSecureRandom, 
             params.new_settings.email = settings.email || ''
         }
 
-        return $q.all([currentHashPromise, newHashPromise]).then(function (hashes) {
+        return Promise.all([currentHashPromise, newHashPromise]).then(function (hashes) {
             params.current_password_hash = hashes[0]
             params.new_settings.new_password_hash = hashes[1]
 
@@ -99,8 +99,5 @@ function MtpPasswordManagerModule(MtpApiManager, CryptoWorker, MtpSecureRandom, 
 MtpPasswordManagerModule.dependencies = [
     'MtpApiManager',
     'CryptoWorker',
-    'MtpSecureRandom',
-    '$timeout',
-    '$q',
-    '$rootScope'
+    'MtpSecureRandom'
 ]

@@ -22,7 +22,6 @@ builder.register('MtpPasswordManager', MtpPasswordManagerModule);
 // Register Angular modules
 builder.register('$http', $httpModule);
 builder.register('$interval', $intervalModule);
-builder.register('$q', $qModule);
 builder.register('$rootScope', $rootScopeModule);
 builder.register('$timeout', $timeoutModule);
 
@@ -32,7 +31,6 @@ builder.register('IdleManager', IdleManagerModule);
 builder.register('qSync', qSyncModule);
 builder.register('Storage', StorageModule);
 builder.register('TelegramMeWebService', TelegramMeWebServiceModule);
-builder.register('jQuery', jQueryModule);
 builder.register('FileSaver', FileSaverModule);
 
 // Register TelegramApi module

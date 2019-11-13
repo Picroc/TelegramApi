@@ -1,4 +1,4 @@
-function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, AppUsersManager, AppProfileManager, AppChatsManager, MtpNetworkerFactory, MtpPasswordManager, FileSaver, $q, $timeout) {
+function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, AppUsersManager, AppProfileManager, AppChatsManager, MtpNetworkerFactory, MtpPasswordManager, FileSaver, $timeout) {
     var options = { dcID: 2, createNetworker: true };
 
     MtpNetworkerFactory.setUpdatesProcessor(function (message) {
@@ -470,48 +470,47 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
         var size = 15728640;
         var limit = 524288;
         var offset = 0;
-        var done = $q.defer();
-        var bytes = [];
+        return new Promise(function (resolve, request) {
+            var bytes = [];
 
-        if (doc.size > size) {
-            throw new Error('Big file not supported');
-        }
-
-        size = doc.size;
-
-        forEach(doc.attributes, function (attr) {
-            if (attr._ == 'documentAttributeFilename') {
-                fileName = attr.file_name;
+            if (doc.size > size) {
+                throw new Error('Big file not supported');
             }
-        });
 
-        function download() {
-            if (offset < size) {
-                MtpApiManager.invokeApi('upload.getFile', {
-                    location: location,
-                    offset: offset,
-                    limit: limit
-                }).then(function (result) {
-                    bytes.push(result.bytes);
-                    offset += limit;
-                    progress(offset < size ? offset : size, size);
-                    download();
-                });
-            } else {
-                if (autosave) {
-                    FileSaver.save(bytes, fileName);
+            size = doc.size;
+
+            forEach(doc.attributes, function (attr) {
+                if (attr._ == 'documentAttributeFilename') {
+                    fileName = attr.file_name;
                 }
-                done.resolve({
-                    bytes: bytes,
-                    fileName: fileName,
-                    type: doc.mime_type
-                });
+            });
+
+            function download() {
+                if (offset < size) {
+                    MtpApiManager.invokeApi('upload.getFile', {
+                        location: location,
+                        offset: offset,
+                        limit: limit
+                    }).then(function (result) {
+                        bytes.push(result.bytes);
+                        offset += limit;
+                        progress(offset < size ? offset : size, size);
+                        download();
+                    });
+                } else {
+                    if (autosave) {
+                        FileSaver.save(bytes, fileName);
+                    }
+                    resolve({
+                        bytes: bytes,
+                        fileName: fileName,
+                        type: doc.mime_type
+                    });
+                }
             }
-        }
 
-        $timeout(download);
-
-        return done.promise;
+            $timeout(download);
+        });
     }
 
     /**
@@ -603,42 +602,42 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
         var size = 15728640;
         var limit = 524288;
         var offset = 0;
-        var done = $q.defer();
-        var bytes = [];
 
-        if (photoSize.size > size) {
-            throw new Error('Big file not supported');
-        }
+        return new Promise(function (resolve, reject) {
+            var bytes = [];
 
-        size = photoSize.size;
-
-        function download() {
-            if (offset < size) {
-                MtpApiManager.invokeApi('upload.getFile', {
-                    location: location,
-                    offset: offset,
-                    limit: limit
-                }).then(function (result) {
-                    bytes.push(result.bytes);
-                    offset += limit;
-                    progress(offset < size ? offset : size, size);
-                    download();
-                });
-            } else {
-                if (autosave) {
-                    FileSaver.save(bytes, fileName);
-                }
-                done.resolve({
-                    bytes: bytes,
-                    fileName: fileName,
-                    type: 'image/jpeg'
-                });
+            if (photoSize.size > size) {
+                throw new Error('Big file not supported');
             }
-        }
 
-        $timeout(download);
+            size = photoSize.size;
 
-        return done.promise;
+            function download() {
+                if (offset < size) {
+                    MtpApiManager.invokeApi('upload.getFile', {
+                        location: location,
+                        offset: offset,
+                        limit: limit
+                    }).then(function (result) {
+                        bytes.push(result.bytes);
+                        offset += limit;
+                        progress(offset < size ? offset : size, size);
+                        download();
+                    });
+                } else {
+                    if (autosave) {
+                        FileSaver.save(bytes, fileName);
+                    }
+                    resolve({
+                        bytes: bytes,
+                        fileName: fileName,
+                        type: 'image/jpeg'
+                    });
+                }
+            }
+
+            $timeout(download);
+        });
     }
 
     function editChannelTitle(channel_id, title) {
@@ -672,51 +671,51 @@ function TelegramApiModule(MtpApiManager, AppPeersManager, MtpApiFileManager, Ap
         }
 
         var peer = AppPeersManager.getPeer(id);
-        var defer = $q.defer();
 
-        if (!peer.deleted) {
-            return defer.resolve(peer).promise;
-        }
 
-        var offsetDate = 0;
-        var dialogsLoaded = 0;
-        var totalCount = 0;
+        return new Promise(function (resolve, reject) {
+            if (!peer.deleted) {
+                return resolve(peer);
+            }
 
-        (function load() {
-            MtpApiManager.invokeApi('messages.getDialogs', {
-                offset_peer: AppPeersManager.getInputPeerByID(0),
-                limit: 100,
-                offset_date: offsetDate
-            }).then(function (result) {
-                AppChatsManager.saveApiChats(result.chats);
-                AppUsersManager.saveApiUsers(result.users);
+            var offsetDate = 0;
+            var dialogsLoaded = 0;
+            var totalCount = 0;
 
-                dialogsLoaded += result.dialogs.length;
-                totalCount = result.count;
+            (function load() {
+                MtpApiManager.invokeApi('messages.getDialogs', {
+                    offset_peer: AppPeersManager.getInputPeerByID(0),
+                    limit: 100,
+                    offset_date: offsetDate
+                }).then(function (result) {
+                    AppChatsManager.saveApiChats(result.chats);
+                    AppUsersManager.saveApiUsers(result.users);
 
-                var peer = AppPeersManager.getPeer(id);
+                    dialogsLoaded += result.dialogs.length;
+                    totalCount = result.count;
 
-                if (!peer.deleted) {
-                    defer.resolve(peer);
-                    return;
-                }
+                    var peer = AppPeersManager.getPeer(id);
 
-                if (totalCount && dialogsLoaded < totalCount) {
-                    var dates = map(result.messages, function (msg) {
-                        return msg.date;
-                    });
-                    offsetDate = min(dates);
-                    load();
-                    return;
-                }
+                    if (!peer.deleted) {
+                        resolve(peer);
+                        return;
+                    }
 
-                defer.reject({ type: 'PEER_NOT_FOUND' });
-            }, function (err) {
-                defer.reject(err);
-            });
-        })();
+                    if (totalCount && dialogsLoaded < totalCount) {
+                        var dates = map(result.messages, function (msg) {
+                            return msg.date;
+                        });
+                        offsetDate = min(dates);
+                        load();
+                        return;
+                    }
 
-        return defer.promise;
+                    reject({ type: 'PEER_NOT_FOUND' });
+                }, function (err) {
+                    reject(err);
+                });
+            })();
+        });
     }
 
     function getDocumentPreview(doc) {
@@ -817,6 +816,5 @@ TelegramApiModule.dependencies = [
     'MtpNetworkerFactory',
     'MtpPasswordManager',
     'FileSaver',
-    '$q',
     '$timeout'
 ];

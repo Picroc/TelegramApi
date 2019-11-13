@@ -1,24 +1,21 @@
-function StorageModule($q) {
+function StorageModule() {
     var methods = {};
 
     forEach(['get', 'set', 'remove'], function (methodName) {
         methods[methodName] = function () {
-            var deferred = $q.defer(),
-                args = toArray(arguments);
+            var args = toArray(arguments);
+            return new Promise(function (resolve, reject) {
 
-            args.push(function (result) {
-                deferred.resolve(result);
+                args.push(function (result) {
+                    resolve(result);
+                });
+
+                ConfigStorage[methodName].apply(ConfigStorage, args);
             });
-
-            ConfigStorage[methodName].apply(ConfigStorage, args);
-
-            return deferred.promise;
         };
     });
 
     return methods;
 }
 
-StorageModule.dependencies = [
-    '$q'
-];
+StorageModule.dependencies = [];

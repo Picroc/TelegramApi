@@ -1,4 +1,4 @@
-function MtpApiFileManagerModule(MtpApiManager, $q) {
+function MtpApiFileManagerModule(MtpApiManager) {
     var cachedFs = false;
     var cachedFsPromise = false;
     var cachedSavePromises = {};
@@ -14,13 +14,12 @@ function MtpApiFileManagerModule(MtpApiManager, $q) {
             downloadActives[dcID] = 0
         }
         var downloadPull = downloadPulls[dcID];
-        var deferred = $q.defer();
-        downloadPull.push({cb: cb, deferred: deferred, activeDelta: activeDelta});
-        setZeroTimeout(function () {
-            downloadCheck(dcID);
+        return new Promise(function (resolve, reject) {
+            downloadPull.push({ cb: cb, resolve: resolve, reject: reject, activeDelta: activeDelta });
+            setZeroTimeout(function () {
+                downloadCheck(dcID);
+            });
         });
-
-        return deferred.promise;
     }
 
     var index = 0;
@@ -44,13 +43,13 @@ function MtpApiFileManagerModule(MtpApiManager, $q) {
                 downloadActives[dcID] -= activeDelta;
                 downloadCheck(dcID);
 
-                data.deferred.resolve(result);
+                data.resolve(result);
 
             }, function (error) {
                 downloadActives[dcID] -= activeDelta;
                 downloadCheck(dcID);
 
-                data.deferred.reject(error);
+                data.reject(error);
             })
     }
 
@@ -64,7 +63,7 @@ function MtpApiFileManagerModule(MtpApiManager, $q) {
             activeDelta = 2;
 
         if (!fileSize) {
-            return $q.reject({type: 'EMPTY_FILE'});
+            return Promise.reject({ type: 'EMPTY_FILE' });
         }
 
         if (fileSize > 67108864) {
@@ -78,82 +77,81 @@ function MtpApiFileManagerModule(MtpApiManager, $q) {
         var totalParts = Math.ceil(fileSize / partSize);
 
         if (totalParts > 3000) {
-            return $q.reject({type: 'FILE_TOO_BIG'});
+            return Promise.reject({ type: 'FILE_TOO_BIG' });
         }
 
-        var fileID = [nextRandomInt(0xFFFFFFFF), nextRandomInt(0xFFFFFFFF)],
-            deferred = $q.defer(),
-            errorHandler = function (error) {
-                // console.error('Up Error', error);
-                deferred.reject(error);
-                canceled = true;
-                errorHandler = noop;
-            },
-            part = 0,
-            offset,
-            resultInputFile = {
-                _: isBigFile ? 'inputFileBig' : 'inputFile',
-                id: fileID,
-                parts: totalParts,
-                name: file.name,
-                md5_checksum: ''
-            };
+        return new Promise(function (resolve, reject) {
+            var fileID = [nextRandomInt(0xFFFFFFFF), nextRandomInt(0xFFFFFFFF)],
+                errorHandler = function (error) {
+                    // console.error('Up Error', error);
+                    reject(error);
+                    canceled = true;
+                    errorHandler = noop;
+                },
+                part = 0,
+                offset,
+                resultInputFile = {
+                    _: isBigFile ? 'inputFileBig' : 'inputFile',
+                    id: fileID,
+                    parts: totalParts,
+                    name: file.name,
+                    md5_checksum: ''
+                };
 
 
-        for (offset = 0; offset < fileSize; offset += partSize) {
-            (function (offset, part) {
-                downloadRequest('upload', function () {
-                    var uploadDeferred = $q.defer();
+            for (offset = 0; offset < fileSize; offset += partSize) {
+                (function (offset, part) {
+                    downloadRequest('upload', function () {
+                        return new Promise(function (uploadResolve, uploadReject) {
+                            // var uploadDeferred = new Promise();
 
-                    var reader = new FileReader();
-                    var blob = file.slice(offset, offset + partSize);
+                            var reader = new FileReader();
+                            var blob = file.slice(offset, offset + partSize);
 
-                    reader.onloadend = function (e) {
-                        if (canceled) {
-                            uploadDeferred.reject();
-                            return;
-                        }
-                        if (e.target.readyState != FileReader.DONE) {
-                            return;
-                        }
-                        MtpApiManager.invokeApi(isBigFile ? 'upload.saveBigFilePart' : 'upload.saveFilePart', {
-                            file_id: fileID,
-                            file_part: part,
-                            file_total_parts: totalParts,
-                            bytes: e.target.result
-                        }, {
-                            startMaxLength: partSize + 256,
-                            fileUpload: true,
-                            singleInRequest: true
-                        }).then(function (result) {
-                            doneParts++;
-                            uploadDeferred.resolve();
-                            if (doneParts >= totalParts) {
-                                deferred.resolve(resultInputFile);
-                                resolved = true;
-                            } else {
-                                console.log(dT(), 'Progress', doneParts * partSize / fileSize);
-                                deferred.notify({done: doneParts * partSize, total: fileSize});
-                            }
-                        }, errorHandler);
-                    };
+                            reader.onloadend = function (e) {
+                                if (canceled) {
+                                    uploadReject();
+                                    return;
+                                }
+                                if (e.target.readyState != FileReader.DONE) {
+                                    return;
+                                }
+                                MtpApiManager.invokeApi(isBigFile ? 'upload.saveBigFilePart' : 'upload.saveFilePart', {
+                                    file_id: fileID,
+                                    file_part: part,
+                                    file_total_parts: totalParts,
+                                    bytes: e.target.result
+                                }, {
+                                    startMaxLength: partSize + 256,
+                                    fileUpload: true,
+                                    singleInRequest: true
+                                }).then(function (result) {
+                                    doneParts++;
+                                    uploadResolve();
+                                    if (doneParts >= totalParts) {
+                                        resolve(resultInputFile);
+                                        resolved = true;
+                                    } else {
+                                        console.log(dT(), 'Progress', doneParts * partSize / fileSize);
+                                        resolve({ done: doneParts * partSize, total: fileSize });
+                                    }
+                                }, errorHandler);
+                            };
 
-                    reader.readAsArrayBuffer(blob);
-
-                    return uploadDeferred.promise;
-                }, activeDelta);
-            })(offset, part++);
-        }
-
-        deferred.promise.cancel = function () {
-            console.log('cancel upload', canceled, resolved);
-            if (!canceled && !resolved) {
-                canceled = true;
-                errorHandler({type: 'UPLOAD_CANCELED'});
+                            reader.readAsArrayBuffer(blob);
+                        });
+                    }, activeDelta);
+                })(offset, part++);
             }
-        };
 
-        return deferred.promise;
+            this.cancel = function () {
+                console.log('cancel upload', canceled, resolved);
+                if (!canceled && !resolved) {
+                    canceled = true;
+                    errorHandler({ type: 'UPLOAD_CANCELED' });
+                }
+            };
+        });
     }
 
     return {
@@ -162,6 +160,5 @@ function MtpApiFileManagerModule(MtpApiManager, $q) {
 }
 
 MtpApiFileManagerModule.dependencies = [
-    'MtpApiManager', 
-    '$q'
+    'MtpApiManager'
 ];

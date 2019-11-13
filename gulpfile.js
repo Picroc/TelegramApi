@@ -9,7 +9,7 @@ gulp.task('clean', function () {
     return gulp.src([
         'example/js',
         'dist/'
-    ]).pipe($.clean({force: true}));
+    ]).pipe($.clean({ force: true }));
 });
 
 gulp.task('js', function () {
@@ -32,10 +32,9 @@ gulp.task('js', function () {
             footer: '\n})();'
         }))
         .pipe(gulp.dest('dist'))
-
-        .pipe($.rename({suffix: '.min'}))
+        .pipe($.rename({ suffix: '.min' }))
         .pipe($.uglify())
-        .pipe($.wrapper({header: about}))
+        .pipe($.wrapper({ header: about }))
         .pipe(gulp.dest('dist'));
 });
 
@@ -46,7 +45,7 @@ gulp.task('copy', function () {
 
 gulp.task('server', function () {
     gulp.src('example')
-        .pipe($.webserver({open: true}));
+        .pipe($.webserver({ open: true }));
 });
 
 gulp.task('build', ['clean', 'js']);

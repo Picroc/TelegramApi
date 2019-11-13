@@ -1,13 +1,10 @@
-function $timeoutModule($q) {
+function $timeoutModule() {
     var timeout = function (cb, t) {
-        var defer = $q.defer();
-        var promise = defer.promise;
-
-        promise.__timeoutID = setTimeout(function () {
-            defer.resolve(cb());
-        }, t || 0);
-
-        return promise;
+        return new Promise(function (resolve, reject) {
+            this.__timeoutID = setTimeout(function () {
+                resolve(cb());
+            }, t || 0);
+        })
     };
 
     timeout.cancel = function (promise) {
@@ -21,6 +18,4 @@ function $timeoutModule($q) {
     return timeout;
 }
 
-$timeoutModule.dependencies = [
-    '$q'
-];
+$timeoutModule.dependencies = [];

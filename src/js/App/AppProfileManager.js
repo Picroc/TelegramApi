@@ -1,4 +1,4 @@
-function AppProfileManagerModule(AppChatsManager, AppUsersManager, MtpApiManager, $q) {
+function AppProfileManagerModule(AppChatsManager, AppUsersManager, MtpApiManager) {
     var chatsFull = {};
     var chatFullPromises = {};
 
@@ -10,7 +10,7 @@ function AppProfileManagerModule(AppChatsManager, AppUsersManager, MtpApiManager
             var chat = AppChatsManager.getChat(id);
             if (chat.version == chatsFull[id].participants.version ||
                 chat.pFlags.left) {
-                return $q.when(chatsFull[id]);
+                return Promise.resolve(chatsFull[id]);
             }
         }
         if (chatFullPromises[id] !== undefined) {
@@ -59,7 +59,7 @@ function AppProfileManagerModule(AppChatsManager, AppUsersManager, MtpApiManager
     function getChannelParticipants(id) {
         return MtpApiManager.invokeApi('channels.getParticipants', {
             channel: AppChatsManager.getChannelInput(id),
-            filter: {_: 'channelParticipantsRecent'},
+            filter: { _: 'channelParticipantsRecent' },
             offset: 0,
             limit: 200
         }).then(function (result) {
@@ -81,7 +81,7 @@ function AppProfileManagerModule(AppChatsManager, AppUsersManager, MtpApiManager
                     myParticipant = participants[i];
                     participants.splice(i, 1);
                 } else {
-                    myParticipant = {_: 'channelParticipantSelf', user_id: myID};
+                    myParticipant = { _: 'channelParticipantSelf', user_id: myID };
                 }
                 participants.unshift(myParticipant);
             }
@@ -92,7 +92,7 @@ function AppProfileManagerModule(AppChatsManager, AppUsersManager, MtpApiManager
 
     function getChannelFull(id, force) {
         if (chatsFull[id] !== undefined && !force) {
-            return $q.when(chatsFull[id]);
+            return Promise.resolve(chatsFull[id]);
         }
         if (chatFullPromises[id] !== undefined) {
             return chatFullPromises[id];
@@ -117,7 +117,7 @@ function AppProfileManagerModule(AppChatsManager, AppUsersManager, MtpApiManager
                     error.handled = true;
                 });
             } else {
-                participantsPromise = $q.when();
+                participantsPromise = Promise.resolve([]);
             }
             return participantsPromise.then(function () {
                 delete chatFullPromises[id];
@@ -126,7 +126,7 @@ function AppProfileManagerModule(AppChatsManager, AppUsersManager, MtpApiManager
                 return fullChannel;
             });
         }, function (error) {
-            return $q.reject(error);
+            return Promise.reject(error);
         });
     }
 
@@ -138,6 +138,5 @@ function AppProfileManagerModule(AppChatsManager, AppUsersManager, MtpApiManager
 AppProfileManagerModule.dependencies = [
     'AppChatsManager',
     'AppUsersManager',
-    'MtpApiManager',
-    '$q'
+    'MtpApiManager'
 ];
